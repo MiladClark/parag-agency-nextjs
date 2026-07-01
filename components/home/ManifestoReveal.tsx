@@ -1,0 +1,76 @@
+"use client";
+
+import { useRef } from "react";
+import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { manifestoLines } from "../../content/data/home";
+
+// Scrollytelling centerpiece: the manifesto lights up word-by-word as the user
+// scrolls through a tall pinned section — the classic "scroll-tell" reveal.
+export function ManifestoReveal() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end end"],
+  });
+
+  // Flatten to words to compute a per-word reveal window across the scroll.
+  const words = manifestoLines.flatMap((line, li) =>
+    line.split(" ").map((w) => ({ w, li })),
+  );
+  const total = words.length;
+
+  // Group word indices back into their lines for layout.
+  let cursor = 0;
+  const lines = manifestoLines.map((line, li) => {
+    const arr = line.split(" ").map((w) => ({ w, i: cursor++, li }));
+    return { li, arr };
+  });
+
+  return (
+    <section ref={ref} className="relative h-[260vh]">
+      <div className="sticky top-0 flex h-screen items-center">
+        <div className="mx-auto w-full max-w-5xl px-5 sm:px-8">
+          <div className="flex flex-col gap-4 text-center">
+            {lines.map(({ li, arr }) => (
+              <p
+                key={li}
+                className="flex flex-wrap justify-center gap-x-3 gap-y-2 text-3xl font-bold leading-[1.4] sm:text-5xl sm:leading-[1.4]"
+              >
+                {arr.map(({ w, i }) => (
+                  <Word key={i} progress={scrollYProgress} index={i} total={total} accent={li === manifestoLines.length - 1}>
+                    {w}
+                  </Word>
+                ))}
+              </p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Word({
+  progress,
+  index,
+  total,
+  accent,
+  children,
+}: {
+  progress: MotionValue<number>;
+  index: number;
+  total: number;
+  accent?: boolean;
+  children: React.ReactNode;
+}) {
+  // Reveal happens over the first 85% of the scroll so the full line lingers.
+  const start = (index / total) * 0.85;
+  const end = start + 0.85 / total;
+  const opacity = useTransform(progress, [start, end], [0.12, 1]);
+
+  return (
+    <motion.span style={{ opacity }} className={accent ? "text-accent" : "text-text"}>
+      {children}
+    </motion.span>
+  );
+}

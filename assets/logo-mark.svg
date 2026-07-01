@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 1080 1080">
+  <!-- Generator: Adobe Illustrator 30.4.0, SVG Export Plug-In . SVG Version: 2.1.4 Build 226)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #0caf20;
+      }
+
+      .st1 {
+        fill: none;
+        stroke: #0caf20;
+        stroke-miterlimit: 10;
+        stroke-width: 102px;
+      }
+    </style>
+  </defs>
+  <g id="logo">
+    <path id="main" class="st1" d="M552.02,365.36v397.17c-.72,121.54-99.45,219.84-221.15,219.84s-221.16-99.02-221.16-221.16,99.48-221.02,221.63-221.02l442.32-.26c121.93-.26,220.69-99.17,220.69-221.15s-99.02-221.16-221.16-221.16-221.16,99.02-221.16,221.16"/>
+    <polygon id="domb" class="st0" points="455.45 540.5 230.31 320.65 99.89 320.43 325.25 540.5 455.45 540.5"/>
+  </g>
+</svg>

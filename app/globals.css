@@ -1,26 +1,259 @@
 @import "tailwindcss";
+@import "@fontsource-variable/vazirmatn";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+  Parag Agency — design tokens
+  Two themes (dark-green / light-green) built around the brand green #0caf20.
+  Utilities (bg-bg, text-text, border-border, bg-accent, …) reference runtime
+  CSS variables via `@theme inline`, so switching `data-theme` on <html> retints
+  the whole UI with no rebuild and no FOUC (theme is set before paint).
+*/
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-panel: var(--panel);
+  --color-panel-hover: var(--panel-hover);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+
+  --font-sans: "Vazirmatn Variable", system-ui, sans-serif;
+
+  --shadow-glow: 0 0 0 1px var(--accent-soft), 0 18px 50px -12px var(--accent-soft);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark green (default) */
+:root,
+:root[data-theme="dark"] {
+  --bg: #080c0a;
+  --surface: #0e1611;
+  --panel: #15201a;
+  --panel-hover: #1d2d24;
+  --border: #243a2d;
+  --accent: #0caf20;
+  --accent-hover: #18cc2e;
+  --accent-soft: rgba(12, 175, 32, 0.18);
+  --text: #eaf3ec;
+  --text-muted: #93a89a;
+  color-scheme: dark;
+}
+
+/* Light green */
+:root[data-theme="light"] {
+  --bg: #f1f7f2;
+  --surface: #ffffff;
+  --panel: #ffffff;
+  --panel-hover: #eaf3ec;
+  --border: #d6e6db;
+  /* Deeper greens in light mode so white button text stays readable. */
+  --accent: #0a8a18;
+  --accent-hover: #087414;
+  --accent-soft: rgba(10, 138, 24, 0.12);
+  --text: #0e1c14;
+  --text-muted: #566b5e;
+  color-scheme: light;
+}
+
+.theme-light-only {
+  display: none;
+}
+.theme-dark-only {
+  display: none;
+}
+:root[data-theme="light"] .theme-light-only {
+  display: block;
+}
+:root[data-theme="dark"] .theme-dark-only {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@layer base {
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------- Page transition (driven by onPageTransitionStart/End) ---------- */
+#page-content {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+body.page-transition #page-content {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+/* ---------- Scroll reveal (Reveal component) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  #page-content {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Brand loader ---------- */
+@keyframes parag-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes parag-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* ---------- Surfaces & depth helpers ---------- */
+
+/* Subtle film grain to add texture/depth on large surfaces */
+.bg-noise {
+  position: relative;
+}
+.bg-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* Glassmorphism panel */
+.glass {
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+/* Layered depth shadow for floating 3D cards */
+.shadow-depth {
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, var(--text) 6%, transparent) inset,
+    0 2px 8px -2px rgba(0, 0, 0, 0.25),
+    0 18px 40px -12px rgba(0, 0, 0, 0.4),
+    0 40px 80px -24px var(--accent-soft);
+}
+
+/* Animated brand-green gradient text */
+.text-gradient {
+  background: linear-gradient(
+    100deg,
+    var(--text) 0%,
+    var(--accent) 45%,
+    var(--accent-hover) 55%,
+    var(--text) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+/* 3D building blocks (used alongside Tailwind transform utilities) */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-gradient,
+  [style*="animation"] {
+    animation: none !important;
+  }
 }
