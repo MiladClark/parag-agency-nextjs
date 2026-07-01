@@ -1,4 +1,13 @@
-import type { PageContent, PortfolioItem, Service, SiteSettings } from "./types";
+import type {
+  BlogCategory,
+  BlogListOptions,
+  BlogListResult,
+  BlogPost,
+  PageContent,
+  PortfolioItem,
+  Service,
+  SiteSettings,
+} from "./types";
 import { fileRepository } from "./fileRepository";
 import { dbRepository } from "./dbRepository";
 
@@ -11,6 +20,14 @@ export interface ContentRepository {
   listServices(): Promise<Service[]>;
   getService(slug: string): Promise<Service | null>;
   listPortfolio(): Promise<PortfolioItem[]>;
+
+  // Blog
+  listPosts(opts?: BlogListOptions): Promise<BlogListResult>;
+  getPost(slug: string): Promise<BlogPost | null>;
+  listCategories(): Promise<BlogCategory[]>;
+  getCategory(slug: string): Promise<BlogCategory | null>;
+  listTags(): Promise<{ tag: string; count: number }[]>;
+  getRelatedPosts(slug: string, limit?: number): Promise<BlogPost[]>;
 }
 
 // Switch to the DB-backed repository by setting CONTENT_SOURCE=db.

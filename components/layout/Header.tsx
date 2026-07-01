@@ -14,6 +14,7 @@ const primaryNav = [
   { label: "خانه", href: "/" },
   { label: "درباره ما", href: "/about" },
   { label: "نمونه کارها", href: "/portfolio" },
+  { label: "بلاگ", href: "/blog" },
   { label: "تماس با ما", href: "/contact" },
 ];
 
@@ -99,6 +100,9 @@ export function Header() {
           </HoverMenu>
           <a href="/portfolio" className={`${navLink} ${isActive("/portfolio", urlPathname) ? "text-accent" : ""}`}>
             نمونه کارها
+          </a>
+          <a href="/blog" className={`${navLink} ${isActive("/blog", urlPathname) ? "text-accent" : ""}`}>
+            بلاگ
           </a>
           <a href="/about" className={`${navLink} ${isActive("/about", urlPathname) ? "text-accent" : ""}`}>
             درباره ما

@@ -42,9 +42,14 @@ export function SupportChatWidget() {
     return () => window.removeEventListener("parag:open-chat", onOpen);
   }, []);
 
-  // Presence indicator, polled regardless of open state.
+  // Presence indicator, polled regardless of open state. Network failures
+  // (e.g. backend offline) are swallowed so they never surface as unhandled
+  // rejections — presence simply keeps its last value.
   useEffect(() => {
-    const refresh = () => void fetchSupportStatus().then((r) => setOnline(r.online));
+    const refresh = () =>
+      void fetchSupportStatus()
+        .then((r) => setOnline(r.online))
+        .catch(() => {});
     refresh();
     const i = setInterval(refresh, PRESENCE_POLL_MS);
     return () => clearInterval(i);
@@ -64,15 +69,17 @@ export function SupportChatWidget() {
     setMessages([]);
     setThreadId(null);
     lastAt.current = null;
-    void loadThreadForKind(kind).then(async (id) => {
-      if (!active) return;
-      setThreadId(id);
-      const { messages: initial } = await fetchMessages(id);
-      if (!active) return;
-      setMessages(initial);
-      lastAt.current = initial.at(-1)?.created_at ?? null;
-      void markRead(id);
-    });
+    void loadThreadForKind(kind)
+      .then(async (id) => {
+        if (!active) return;
+        setThreadId(id);
+        const { messages: initial } = await fetchMessages(id);
+        if (!active) return;
+        setMessages(initial);
+        lastAt.current = initial.at(-1)?.created_at ?? null;
+        void markRead(id).catch(() => {});
+      })
+      .catch(() => {});
     return () => {
       active = false;
     };
@@ -82,13 +89,15 @@ export function SupportChatWidget() {
   useEffect(() => {
     if (!open || !threadId) return;
     const interval = kind === "live_chat" ? POLL_MS : TICKET_POLL_MS;
-    const i = setInterval(async () => {
-      const { messages: fresh } = await fetchMessages(threadId, lastAt.current ?? undefined);
-      if (fresh.length) {
-        setMessages((prev) => [...prev, ...fresh]);
-        lastAt.current = fresh.at(-1)?.created_at ?? lastAt.current;
-        void markRead(threadId);
-      }
+    const i = setInterval(() => {
+      void (async () => {
+        const { messages: fresh } = await fetchMessages(threadId, lastAt.current ?? undefined);
+        if (fresh.length) {
+          setMessages((prev) => [...prev, ...fresh]);
+          lastAt.current = fresh.at(-1)?.created_at ?? lastAt.current;
+          void markRead(threadId).catch(() => {});
+        }
+      })().catch(() => {});
     }, interval);
     return () => clearInterval(i);
   }, [open, threadId, kind]);
@@ -121,6 +130,8 @@ export function SupportChatWidget() {
       lastAt.current = message.created_at;
       setText("");
       clearImage();
+    } catch {
+      /* send failed (e.g. offline) — keep the composer text so the user can retry */
     } finally {
       setBusy(false);
     }

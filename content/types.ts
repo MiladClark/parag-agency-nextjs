@@ -110,3 +110,74 @@ export interface PortfolioItem {
   summary: string;
   tags: string[];
 }
+
+/* ---------------- Blog ---------------- */
+
+export interface BlogAuthor {
+  name: string;
+  role?: string;
+  bio?: string;
+  /** Image URL; falls back to an initial avatar when absent. */
+  avatar?: string;
+}
+
+export interface BlogCategory {
+  slug: string;
+  title: string;
+  description?: string;
+}
+
+/**
+ * Structured post body. Each block renders through a typed renderer
+ * (components/blog/PostBody). Later, Payload's Lexical output maps onto this
+ * same union so pages never change.
+ */
+export type PostBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "heading"; level: 2 | 3; text: string }
+  | { type: "quote"; text: string; cite?: string }
+  | { type: "image"; src: string; alt: string; caption?: string }
+  | { type: "list"; ordered?: boolean; items: string[] }
+  | { type: "code"; lang?: string; code: string }
+  | { type: "divider" };
+
+export interface BlogPost {
+  slug: string;
+  title: string;
+  excerpt: string;
+  /** Real image URL. When absent, `coverGradient` is used as a stand-in. */
+  coverImage?: string;
+  /** Tailwind gradient classes for a placeholder cover (e.g. "from-…/to-…"). */
+  coverGradient?: string;
+  /** Category slug (see BlogCategory). */
+  category: string;
+  tags: string[];
+  author: BlogAuthor;
+  /** ISO date string. */
+  publishedAt: string;
+  updatedAt?: string;
+  /** Optional explicit reading time; otherwise estimated from the body. */
+  readingMinutes?: number;
+  body: PostBlock[];
+  seo: SeoMeta;
+  featured?: boolean;
+  /** Multi-tenant scope (defaults to the current site's tenant). */
+  tenant?: string;
+}
+
+export interface BlogListResult {
+  posts: BlogPost[];
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+}
+
+export interface BlogListOptions {
+  category?: string;
+  tag?: string;
+  q?: string;
+  page?: number;
+  perPage?: number;
+  tenant?: string;
+}

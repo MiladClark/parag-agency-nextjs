@@ -1,5 +1,14 @@
 import type { ContentRepository } from "./repository";
-import type { PageContent, PortfolioItem, Service, SiteSettings } from "./types";
+import type {
+  BlogCategory,
+  BlogListOptions,
+  BlogListResult,
+  BlogPost,
+  PageContent,
+  PortfolioItem,
+  Service,
+  SiteSettings,
+} from "./types";
 import { fileRepository } from "./fileRepository";
 
 // DB-backed content (read via the Express content API). Runs during SSR and on
@@ -54,5 +63,28 @@ export const dbRepository: ContentRepository = {
     } catch {
       return fileRepository.listPortfolio();
     }
+  },
+
+  // Blog — currently proxied to the file data. When the shared Payload CMS is
+  // ready, replace these bodies with tenant-scoped Payload REST queries
+  // (e.g. `${PAYLOAD_URL}/api/posts?where[tenant.slug][equals]=${CURRENT_TENANT}`)
+  // and keep the same fall-back-to-file safety net used above.
+  async listPosts(opts?: BlogListOptions): Promise<BlogListResult> {
+    return fileRepository.listPosts(opts);
+  },
+  async getPost(slug: string): Promise<BlogPost | null> {
+    return fileRepository.getPost(slug);
+  },
+  async listCategories(): Promise<BlogCategory[]> {
+    return fileRepository.listCategories();
+  },
+  async getCategory(slug: string): Promise<BlogCategory | null> {
+    return fileRepository.getCategory(slug);
+  },
+  async listTags(): Promise<{ tag: string; count: number }[]> {
+    return fileRepository.listTags();
+  },
+  async getRelatedPosts(slug: string, limit?: number): Promise<BlogPost[]> {
+    return fileRepository.getRelatedPosts(slug, limit);
   },
 };

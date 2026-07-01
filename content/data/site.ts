@@ -21,6 +21,7 @@ export const siteSettings: SiteSettings = {
       ],
     },
     { label: "نمونه کارها", href: "/portfolio" },
+    { label: "بلاگ", href: "/blog" },
     { label: "تماس با ما", href: "/contact" },
   ],
   contact: {

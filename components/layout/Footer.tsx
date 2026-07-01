@@ -6,12 +6,12 @@ const logoMark = "/logo-mark.svg";
 import { Icon } from "../ui/Icon";
 
 export function Footer() {
-  const { contact, social } = siteSettings;
+  const { contact, social, nav } = siteSettings;
   const year = new Date().getFullYear();
 
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         {/* Brand */}
         <div className="flex flex-col gap-4">
           <a href="/" className="flex items-center gap-2.5">
@@ -45,6 +45,20 @@ export function Footer() {
               className="text-sm text-text-muted transition-colors hover:text-accent"
             >
               {s.title}
+            </a>
+          ))}
+        </div>
+
+        {/* Quick links */}
+        <div className="flex flex-col gap-3">
+          <h3 className="text-sm font-semibold text-text">دسترسی سریع</h3>
+          {nav.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="text-sm text-text-muted transition-colors hover:text-accent"
+            >
+              {item.label}
             </a>
           ))}
         </div>
