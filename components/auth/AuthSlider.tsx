@@ -3,36 +3,131 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { portfolio } from "../../content/data/portfolio";
-const logoMark = "/logo-mark.svg";
+import { CURRENT_TENANT } from "../../content/tenant";
 
-const slides = portfolio.slice(0, 4);
+const logoMark = "/logo-mark.svg";
+const PAYLOAD = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3004";
 const DURATION = 5000;
 
-// A bespoke showcase slider for the auth split-screen: Ken-Burns gradient
-// scenes with floating glass panels, a glass caption, and segmented progress.
+interface AuthSlide {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  cover: string;
+  imageUrl?: string;
+}
+
+const FALLBACK_SLIDES: AuthSlide[] = portfolio.slice(0, 4).map((item) => ({
+  id: item.slug,
+  title: item.title,
+  category: item.category,
+  summary: item.summary,
+  cover: item.cover,
+}));
+
+interface PayloadMedia {
+  url?: string | null;
+}
+
+interface PayloadHeroSlide {
+  id: number;
+  title: string;
+  category?: string | null;
+  summary?: string | null;
+  image?: PayloadMedia | number | null;
+  coverGradient?: string | null;
+  order?: number | null;
+}
+
+function mediaUrl(media: PayloadMedia | number | null | undefined): string | undefined {
+  if (!media || typeof media === "number" || !media.url) return undefined;
+  return media.url.startsWith("http") ? media.url : `${PAYLOAD}${media.url}`;
+}
+
+function mapSlide(doc: PayloadHeroSlide): AuthSlide {
+  return {
+    id: String(doc.id),
+    title: doc.title,
+    category: doc.category ?? "",
+    summary: doc.summary ?? "",
+    cover: doc.coverGradient ?? "from-emerald-500/30 to-green-700/30",
+    imageUrl: mediaUrl(doc.image),
+  };
+}
+
+async function fetchHeroSlides(): Promise<AuthSlide[]> {
+  const tenant = encodeURIComponent(CURRENT_TENANT);
+  const res = await fetch(
+    `${PAYLOAD}/api/heroSlides?where[tenant.slug][equals]=${tenant}&sort=order&depth=1&limit=20`,
+  );
+  if (!res.ok) throw new Error(`heroSlides ${res.status}`);
+  const data = (await res.json()) as { docs: PayloadHeroSlide[] };
+  const slides = data.docs.map(mapSlide);
+  if (!slides.length) throw new Error("no slides");
+  return slides;
+}
+
+// Showcase slider for the auth split-screen: image or gradient scenes with
+// floating glass panels, a glass caption, and segmented progress.
 export function AuthSlider() {
+  const [slides, setSlides] = useState<AuthSlide[]>(FALLBACK_SLIDES);
   const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchHeroSlides()
+      .then((docs) => {
+        if (!cancelled) setSlides(docs);
+      })
+      .catch(() => {
+        /* keep bundled fallback */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const id = window.setInterval(() => setIndex((i) => (i + 1) % slides.length), DURATION);
     return () => window.clearInterval(id);
-  }, []);
+  }, [slides.length]);
 
-  const slide = slides[index];
+  useEffect(() => {
+    if (index >= slides.length) setIndex(0);
+  }, [index, slides.length]);
+
+  const slide = slides[index] ?? slides[0];
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#05080a]">
       <AnimatePresence mode="sync">
-        <motion.div
-          key={index}
-          className={`absolute inset-0 bg-gradient-to-br ${slide.cover}`}
-          initial={{ opacity: 0, scale: 1.12 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ opacity: { duration: 1 }, scale: { duration: DURATION / 1000, ease: "linear" } }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" aria-hidden />
-        </motion.div>
+        {slide.imageUrl ? (
+          <motion.img
+            key={`img-${index}`}
+            src={slide.imageUrl}
+            alt={slide.title}
+            className="absolute inset-0 h-full w-full object-cover"
+            initial={{ opacity: 0, scale: 1.12 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { duration: 1 }, scale: { duration: DURATION / 1000, ease: "linear" } }}
+          />
+        ) : (
+          <motion.div
+            key={`grad-${index}`}
+            className={`absolute inset-0 bg-gradient-to-br ${slide.cover}`}
+            initial={{ opacity: 0, scale: 1.12 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ opacity: { duration: 1 }, scale: { duration: DURATION / 1000, ease: "linear" } }}
+          />
+        )}
+        <div
+          key={`overlay-${index}`}
+          className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30"
+          aria-hidden
+        />
       </AnimatePresence>
 
       {/* floating glass panels for depth */}
@@ -77,13 +172,17 @@ export function AuthSlider() {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-md"
           >
-            <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur">
-              {slide.category}
-            </span>
+            {slide.category ? (
+              <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                {slide.category}
+              </span>
+            ) : null}
             <h2 className="mt-4 text-2xl font-extrabold leading-snug text-white sm:text-3xl">
               {slide.title}
             </h2>
-            <p className="mt-3 text-sm leading-7 text-white/80">{slide.summary}</p>
+            {slide.summary ? (
+              <p className="mt-3 text-sm leading-7 text-white/80">{slide.summary}</p>
+            ) : null}
           </motion.div>
         </AnimatePresence>
 
@@ -91,7 +190,7 @@ export function AuthSlider() {
         <div className="mt-8 flex items-center gap-2">
           {slides.map((s, i) => (
             <button
-              key={s.slug}
+              key={s.id}
               type="button"
               onClick={() => setIndex(i)}
               aria-label={`اسلاید ${i + 1}`}
