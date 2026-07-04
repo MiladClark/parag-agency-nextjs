@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, User, Lock, ShieldCheck, MessageSquare, Camera, X, Loader2 } from "lucide-react";
+import { Mail, User, Lock, MessageSquare, Camera, X, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { changePasswordWithApi, deleteAvatarWithApi, updateProfileWithApi, uploadAvatarWithApi } from "@/lib/authApi";
 import { Container } from "@/components/ui/Section";
@@ -11,14 +11,8 @@ import { Input, FieldLabel } from "@/components/ui/Field";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { Loader } from "@/components/Loader";
 
-const ROLE_LABELS: Record<string, string> = {
-  user: "کاربر",
-  admin: "ادمین",
-  super_admin: "سوپرادمین",
-};
-
 export default function AccountClient() {
-  const { user, profile, loading, isAuthenticated, isAdmin, refreshProfile } = useAuth();
+  const { user, profile, loading, isAuthenticated, refreshProfile } = useAuth();
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -129,32 +123,12 @@ export default function AccountClient() {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h1 className="text-2xl font-extrabold text-text sm:text-3xl">{displayName}</h1>
-              {profile?.role && (
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
-                    isAdmin ? "bg-accent/15 text-accent" : "bg-panel text-text-muted"
-                  }`}
-                >
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  {ROLE_LABELS[profile.role] ?? profile.role}
-                </span>
-              )}
-            </div>
+            <h1 className="text-2xl font-extrabold text-text sm:text-3xl">{displayName}</h1>
             <p className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-text-muted sm:justify-start">
               <Mail className="h-4 w-4" />
               {user?.email}
             </p>
           </div>
-          {isAdmin && (
-            <a href="/admin" className="shrink-0">
-              <Button variant="secondary" size="sm">
-                <ShieldCheck className="h-4 w-4" />
-                پنل ادمین
-              </Button>
-            </a>
-          )}
         </div>
       </div>
 

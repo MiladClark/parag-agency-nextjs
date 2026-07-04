@@ -41,7 +41,6 @@ export function Header() {
 
   // Transparent overlay only over the home hero; solid everywhere else.
   const isHome = urlPathname === "/";
-  const isAdmin = urlPathname.startsWith("/admin");
   const solid = scrolled || !isHome;
 
   return (
@@ -60,11 +59,7 @@ export function Header() {
         aria-hidden
       />
 
-      <div
-        className={`mx-auto flex h-[4.5rem] items-center justify-between gap-4 px-5 sm:px-8 lg:grid lg:grid-cols-[1fr_auto_1fr] ${
-          isAdmin ? "max-w-none" : "max-w-7xl"
-        }`}
-      >
+      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-5 sm:px-8 lg:grid lg:grid-cols-[1fr_auto_1fr]">
         {/* Brand */}
         <a href="/" className="flex shrink-0 items-center lg:justify-self-start">
           <img
@@ -164,14 +159,6 @@ export function Header() {
           ))}
 
           <div className="mt-3 flex items-center justify-center gap-2 border-t border-border/70 pt-4">
-            <a
-              href="/admin"
-              title="پنل ادمین"
-              aria-label="پنل ادمین"
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-text hover:bg-panel"
-            >
-              <Icon name="admin" />
-            </a>
             <a
               href="/login"
               title="ورود"

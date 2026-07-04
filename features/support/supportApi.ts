@@ -1,4 +1,8 @@
-import { apiFetch, getApiBaseUrl, getAuthToken } from "../../lib/api";
+import { getAuthToken } from "../../lib/api";
+import { CURRENT_TENANT } from "../../content/tenant";
+
+// Chat client → Payload CMS public support endpoints (/api/site/support/*),
+// scoped to this site's tenant and the authenticated customer.
 
 export const SUPPORT_KINDS = ["live_chat", "feature_request", "bug_report", "site_message"] as const;
 export type SupportKind = (typeof SUPPORT_KINDS)[number];
@@ -28,48 +32,59 @@ export interface SupportMessage {
   created_at: string;
 }
 
+const PAYLOAD = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3004";
+
+function headers(json = true): Headers {
+  const h = new Headers();
+  if (json) h.set("Content-Type", "application/json");
+  h.set("x-tenant", CURRENT_TENANT);
+  const token = getAuthToken();
+  if (token) h.set("Authorization", `JWT ${token}`);
+  return h;
+}
+
+async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${PAYLOAD}/api/site/support${path}`, {
+    ...options,
+    headers: options.headers ?? headers(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.errors?.[0]?.message || data?.message || "خطا در گفتگو.");
+  return data as T;
+}
+
 export function fetchSupportStatus() {
-  return apiFetch<{ online: boolean }>("/support/status");
+  return api<{ online: boolean }>("/status");
 }
 export function fetchThreads() {
-  return apiFetch<{ threads: SupportThread[] }>("/support/threads");
+  return api<{ threads: SupportThread[] }>("/threads");
 }
 export function createThread(kind: SupportKind = "live_chat", forceNew = false) {
-  return apiFetch<{ thread: SupportThread }>("/support/threads", {
+  return api<{ thread: SupportThread }>("/thread", {
     method: "POST",
     body: JSON.stringify({ kind, force_new: forceNew }),
   });
 }
 export function fetchMessages(threadId: string, since?: string) {
-  const qs = since ? `?since=${encodeURIComponent(since)}` : "";
-  return apiFetch<{ messages: SupportMessage[] }>(`/support/threads/${threadId}/messages${qs}`);
+  const qs = new URLSearchParams({ thread: threadId });
+  if (since) qs.set("since", since);
+  return api<{ messages: SupportMessage[] }>(`/messages?${qs.toString()}`);
 }
 export function sendMessage(threadId: string, input: { body?: string; image_url?: string }) {
-  return apiFetch<{ message: SupportMessage }>(`/support/threads/${threadId}/messages`, {
+  return api<{ message: SupportMessage }>("/messages", {
     method: "POST",
-    body: JSON.stringify(input),
+    body: JSON.stringify({ thread: threadId, ...input }),
   });
 }
 export function markRead(threadId: string) {
-  return apiFetch(`/support/threads/${threadId}/read`, { method: "POST" });
-}
-export function fetchUnread() {
-  return apiFetch<{ count: number }>("/support/unread");
-}
-export function fetchUnreadByKind() {
-  return apiFetch<{ byKind: SupportUnreadByKind }>("/support/unread-by-kind");
+  return api("/read", { method: "POST", body: JSON.stringify({ thread: threadId }) });
 }
 
 export async function uploadSupportImage(file: File): Promise<string> {
   const form = new FormData();
   form.append("file", file);
-  const headers = new Headers();
-  const token = getAuthToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  const res = await fetch(`${getApiBaseUrl()}/support/media`, { method: "POST", body: form, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "آپلود تصویر ناموفق بود.");
-  return data.url as string;
+  const data = await api<{ url: string }>("/media", { method: "POST", body: form, headers: headers(false) });
+  return data.url;
 }
 
 export const SUPPORT_KIND_LABELS: Record<SupportKind, string> = {

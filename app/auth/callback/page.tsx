@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { applyOAuthToken, fetchMeFromApi } from "@/lib/authApi";
+import { applyOAuthToken } from "@/lib/authApi";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Loader } from "@/components/Loader";
 
@@ -25,11 +25,7 @@ export default function Page() {
     }
     applyOAuthToken(token);
     void refreshProfile()
-      .then(() => fetchMeFromApi())
-      .then((data) => {
-        const isAdmin = data?.profile?.role === "admin" || data?.profile?.role === "super_admin";
-        router.push(isAdmin ? "/admin" : "/account");
-      })
+      .then(() => router.push("/account"))
       .catch(() => setError("ورود با گوگل ناموفق بود."));
   }, [refreshProfile, router]);
 

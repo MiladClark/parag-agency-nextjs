@@ -15,7 +15,7 @@ import { fileRepository } from "./fileRepository";
 // client-side navigation; the localhost API URL works from both in dev.
 // If the API is unavailable, each method falls back to the bundled file data so
 // the site never breaks (e.g. before MySQL/the backend is running).
-const API = process.env.API_INTERNAL_URL || "http://localhost:3001/api";
+const API = process.env.API_INTERNAL_URL || "http://localhost:3006/api";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${API}${path}`);

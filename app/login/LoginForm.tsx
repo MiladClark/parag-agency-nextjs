@@ -27,9 +27,8 @@ export default function LoginForm() {
     }
     setSubmitting(true);
     try {
-      const { profile } = await signIn(email.trim(), password);
-      const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
-      router.push(isAdmin ? "/admin" : "/account");
+      await signIn(email.trim(), password);
+      router.push("/account");
     } catch (err) {
       setError(err instanceof Error ? err.message : "ورود ناموفق بود.");
     } finally {

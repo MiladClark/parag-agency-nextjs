@@ -12,7 +12,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (isAuth) return <div className="text-text">{children}</div>;
 
   const isHome = pathname === "/";
-  const isAdmin = pathname.startsWith("/admin");
 
   return (
     <div className="flex min-h-screen flex-col text-text">
@@ -20,8 +19,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main id="page-content" className={`flex-1 ${isHome ? "" : "pt-[4.5rem]"}`}>
         {children}
       </main>
-      {!isAdmin && <Footer />}
-      {!isAdmin && <SupportChatWidget />}
+      <Footer />
+      <SupportChatWidget />
     </div>
   );
 }

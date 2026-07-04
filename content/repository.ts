@@ -10,6 +10,7 @@ import type {
 } from "./types";
 import { fileRepository } from "./fileRepository";
 import { dbRepository } from "./dbRepository";
+import { payloadRepository } from "./payloadRepository";
 
 // The single seam between the app and its content source.
 // Phase 1 returns the file-backed repository. To move content into a database
@@ -30,9 +31,12 @@ export interface ContentRepository {
   getRelatedPosts(slug: string, limit?: number): Promise<BlogPost[]>;
 }
 
-// Switch to the DB-backed repository by setting CONTENT_SOURCE=db.
-// Falls back to the bundled file data otherwise (works with no backend).
+// Switch content sources via CONTENT_SOURCE:
+//   "payload" — blog from the shared Payload CMS (tenant-scoped), rest from file
+//   "db"      — content from the Express backend
+//   otherwise — bundled file data (works with no backend)
 export function getContentRepository(): ContentRepository {
   const source = process.env.CONTENT_SOURCE || "file";
+  if (source === "payload") return payloadRepository;
   return source === "db" ? dbRepository : fileRepository;
 }

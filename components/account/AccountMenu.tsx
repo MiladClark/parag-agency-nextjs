@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
-import { User, Shield, MessageSquare, LogOut } from "lucide-react";
+import { User, MessageSquare, LogOut } from "lucide-react";
 import { useAuth } from "../../features/auth/AuthContext";
 
 // Header profile dropdown, ported from CoachOps' AccountMenu.
 export function AccountMenu() {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -63,11 +63,6 @@ export function AccountMenu() {
           <a href="/account" onClick={() => setOpen(false)}>
             <MenuItem icon={User} label="حساب کاربری" />
           </a>
-          {isAdmin && (
-            <a href="/admin" onClick={() => setOpen(false)}>
-              <MenuItem icon={Shield} label="پنل ادمین" />
-            </a>
-          )}
 
           <div className="my-1 border-t border-border" />
           <button

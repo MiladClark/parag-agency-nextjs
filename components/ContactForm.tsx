@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "./ui/Button";
 import { Icon } from "./ui/Icon";
-import { apiFetch } from "../lib/api";
+import { submitContact } from "../lib/siteApi";
 
 type Field = "name" | "email" | "phone" | "message";
 
@@ -47,7 +47,7 @@ export function ContactForm() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      await apiFetch("/contact", { method: "POST", body: JSON.stringify(values) });
+      await submitContact(values);
       setSent(true);
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "ارسال پیام ناموفق بود.");

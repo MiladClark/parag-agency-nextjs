@@ -2,7 +2,7 @@
 const AUTH_TOKEN_KEY = "parag_auth_token";
 
 export function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:3006/api";
 }
 
 export function getAuthToken(): string | null {
