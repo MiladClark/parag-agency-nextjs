@@ -119,6 +119,7 @@ export function ScrollJourneyLine() {
             d={box.d}
             stroke="var(--accent)"
             strokeWidth={1}
+            strokeOpacity={0.4}
             strokeLinecap="round"
             strokeLinejoin="round"
             style={{ pathLength: drawn }}
