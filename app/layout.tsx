@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "./providers";
 import { AppShell } from "@/components/layout/AppShell";
 import { themeInitScript } from "@/lib/theme";
 
@@ -21,9 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-screen antialiased">
-        <Providers>
-          <AppShell>{children}</AppShell>
-        </Providers>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

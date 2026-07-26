@@ -6,9 +6,6 @@ import { services } from "../../content/data/services";
 import { Icon } from "../ui/Icon";
 import { ThemeToggle } from "../ThemeToggle";
 import { HoverMenu } from "./HoverMenu";
-import { HeaderAuth } from "./HeaderAuth";
-import { AccountMenu } from "../account/AccountMenu";
-import { useAuth } from "../../features/auth/AuthContext";
 
 const primaryNav = [
   { label: "خانه", href: "/" },
@@ -27,7 +24,6 @@ function isActive(href: string, path: string): boolean {
 
 export function Header() {
   const urlPathname = usePathname();
-  const { isAuthenticated, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -110,14 +106,6 @@ export function Header() {
         {/* End actions */}
         <div className="flex shrink-0 items-center gap-2 lg:justify-self-end">
           <ThemeToggle />
-          {!loading &&
-            (isAuthenticated ? (
-              <AccountMenu />
-            ) : (
-              <div className="hidden sm:block">
-                <HeaderAuth />
-              </div>
-            ))}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -157,25 +145,6 @@ export function Header() {
               {s.title}
             </a>
           ))}
-
-          <div className="mt-3 flex items-center justify-center gap-2 border-t border-border/70 pt-4">
-            <a
-              href="/login"
-              title="ورود"
-              aria-label="ورود"
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-text hover:bg-panel"
-            >
-              <Icon name="login" />
-            </a>
-            <a
-              href="/register"
-              title="ثبت‌نام"
-              aria-label="ثبت‌نام"
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-white hover:bg-accent-hover"
-            >
-              <Icon name="register" />
-            </a>
-          </div>
         </nav>
       )}
     </header>
