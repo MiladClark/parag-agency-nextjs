@@ -5,6 +5,7 @@ import type {
   BlogListOptions,
   BlogListResult,
   BlogPost,
+  InlineNode,
   PostBlock,
 } from "./types";
 import { fileRepository } from "./fileRepository";
@@ -18,8 +19,32 @@ import { CURRENT_TENANT } from "./tenant";
 const PAYLOAD_URL = process.env.PAYLOAD_URL || "http://localhost:3004";
 const DEFAULT_PER_PAGE = 9;
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${PAYLOAD_URL}/api${path}`, { next: { revalidate: 60 } });
+/**
+ * Preview state for the current request. Draft mode is switched on by
+ * /api/preview, which also leaves the editor's Payload JWT in an httpOnly
+ * cookie — without that token the CMS only ever answers with published posts.
+ *
+ * Wrapped in try/catch because this module is also imported where there is no
+ * request to read (generateStaticParams at build time).
+ */
+async function previewContext(): Promise<{ enabled: boolean; token?: string }> {
+  try {
+    const { cookies, draftMode } = await import("next/headers");
+    if (!(await draftMode()).isEnabled) return { enabled: false };
+    return { enabled: true, token: (await cookies()).get("payload-preview-token")?.value };
+  } catch {
+    return { enabled: false };
+  }
+}
+
+async function get<T>(path: string, preview?: { enabled: boolean; token?: string }): Promise<T> {
+  const res = await fetch(`${PAYLOAD_URL}/api${path}`, {
+    // A preview must never be served from cache, or the editor sees the copy
+    // they just changed away from.
+    ...(preview?.enabled
+      ? { cache: "no-store" as const, headers: preview.token ? { Authorization: `JWT ${preview.token}` } : {} }
+      : { next: { revalidate: 60 } }),
+  });
   if (!res.ok) throw new Error(`Payload API ${path} failed: ${res.status}`);
   return (await res.json()) as T;
 }
@@ -46,6 +71,8 @@ interface LexicalNode {
   tag?: string;
   listType?: string;
   text?: string;
+  /** Bitmask of inline marks on a text node (bold, italic, …). */
+  format?: number | string;
   children?: LexicalNode[];
   fields?: Record<string, unknown>;
   value?: unknown;
@@ -80,6 +107,76 @@ function nodeText(node: LexicalNode): string {
   return (node.children ?? []).map(nodeText).join("");
 }
 
+// Lexical packs the inline marks of a text node into one bitmask.
+const FORMAT_BOLD = 1;
+const FORMAT_ITALIC = 1 << 1;
+const FORMAT_STRIKETHROUGH = 1 << 2;
+const FORMAT_UNDERLINE = 1 << 3;
+const FORMAT_CODE = 1 << 4;
+
+type LinkFields = {
+  doc?: { relationTo?: string; value?: { slug?: string } | string } | null;
+  linkType?: "custom" | "internal";
+  newTab?: boolean;
+  url?: string;
+};
+
+function linkHref(fields: LinkFields | undefined): string | undefined {
+  if (!fields) return undefined;
+  if (fields.linkType === "internal") {
+    const value = fields.doc?.value;
+    const slug = value && typeof value === "object" ? value.slug : undefined;
+    // Only posts have a public route today; anything else falls back to its URL.
+    if (slug && fields.doc?.relationTo === "posts") return `/blog/${slug}`;
+  }
+  return fields.url || undefined;
+}
+
+/**
+ * Flattens a block's children into inline runs, keeping link targets and text
+ * marks. `nodeText` above throws both away — which is why an article full of
+ * links arrived on the site as unclickable plain text.
+ */
+function inlineNodes(nodes: LexicalNode[] | undefined): InlineNode[] {
+  const out: InlineNode[] = [];
+
+  for (const node of nodes ?? []) {
+    if (typeof node.text === "string") {
+      if (!node.text) continue;
+      const format = typeof node.format === "number" ? node.format : 0;
+      out.push({
+        type: "text",
+        text: node.text,
+        bold: Boolean(format & FORMAT_BOLD),
+        italic: Boolean(format & FORMAT_ITALIC),
+        strikethrough: Boolean(format & FORMAT_STRIKETHROUGH),
+        underline: Boolean(format & FORMAT_UNDERLINE),
+        code: Boolean(format & FORMAT_CODE),
+      });
+      continue;
+    }
+
+    if (node.type === "link" || node.type === "autolink") {
+      const fields = node.fields as LinkFields | undefined;
+      const url = linkHref(fields);
+      const children = inlineNodes(node.children);
+      // A link with no resolvable target is still text worth keeping.
+      if (url) out.push({ type: "link", url, newTab: Boolean(fields?.newTab), children });
+      else out.push(...children);
+      continue;
+    }
+
+    if (node.type === "linebreak") {
+      out.push({ type: "text", text: "\n" });
+      continue;
+    }
+
+    out.push(...inlineNodes(node.children));
+  }
+
+  return out;
+}
+
 function mediaUrl(m: PayloadMedia | string | null | undefined): string | undefined {
   if (!m || typeof m === "string") return undefined;
   if (!m.url) return undefined;
@@ -92,26 +189,31 @@ export function lexicalToBlocks(root: LexicalNode | undefined): PostBlock[] {
     switch (node.type) {
       case "paragraph": {
         const text = nodeText(node).trim();
-        if (text) blocks.push({ type: "paragraph", text });
+        if (text) blocks.push({ type: "paragraph", text, rich: inlineNodes(node.children) });
         break;
       }
       case "heading": {
         const text = nodeText(node).trim();
         if (!text) break;
         const level = node.tag === "h3" ? 3 : 2;
-        blocks.push({ type: "heading", level, text });
+        blocks.push({ type: "heading", level, text, rich: inlineNodes(node.children) });
         break;
       }
       case "quote": {
         const text = nodeText(node).trim();
-        if (text) blocks.push({ type: "quote", text });
+        if (text) blocks.push({ type: "quote", text, rich: inlineNodes(node.children) });
         break;
       }
       case "list": {
-        const items = (node.children ?? [])
-          .map((li) => nodeText(li).trim())
-          .filter(Boolean);
-        if (items.length) blocks.push({ type: "list", ordered: node.listType === "number", items });
+        const rows = (node.children ?? []).filter((li) => nodeText(li).trim());
+        if (rows.length) {
+          blocks.push({
+            type: "list",
+            ordered: node.listType === "number",
+            items: rows.map((li) => nodeText(li).trim()),
+            richItems: rows.map((li) => inlineNodes(li.children)),
+          });
+        }
         break;
       }
       case "horizontalrule":
@@ -126,7 +228,7 @@ export function lexicalToBlocks(root: LexicalNode | undefined): PostBlock[] {
       default: {
         // Unknown block-level node: keep its text so content is never lost.
         const text = nodeText(node).trim();
-        if (text) blocks.push({ type: "paragraph", text });
+        if (text) blocks.push({ type: "paragraph", text, rich: inlineNodes(node.children) });
       }
     }
   }
@@ -218,15 +320,24 @@ export const payloadRepository: ContentRepository = {
   },
 
   async getPost(slug: string): Promise<BlogPost | null> {
+    const preview = await previewContext();
     try {
-      const list = await fetchPosts([
+      const params = [
         tenantParam(),
         `where[slug][equals]=${encodeURIComponent(slug)}`,
         "limit=1",
         "depth=1",
-      ]);
+      ];
+      // `draft=true` makes Payload answer with the newest version rather than
+      // the published one — the whole point of a pre-publish preview.
+      if (preview.enabled) params.push("draft=true");
+
+      const list = await get<PayloadList<PayloadPost>>(`/posts?${params.join("&")}`, preview);
       return list.docs[0] ? mapPost(list.docs[0]) : null;
     } catch {
+      // A failed preview must not silently fall back to bundled sample content —
+      // that would show the editor an article they never wrote.
+      if (preview.enabled) return null;
       return fileRepository.getPost(slug);
     }
   },

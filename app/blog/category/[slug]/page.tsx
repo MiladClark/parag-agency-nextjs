@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContentRepository } from "@/content/repository";
 import { buildMetadata } from "@/lib/seo";
+import { decodeSlugParam } from "@/lib/slug";
 import { Hero } from "@/components/sections/Hero";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/Reveal";
@@ -18,7 +19,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlugParam(rawSlug);
   const category = await getContentRepository().getCategory(slug);
   if (!category) return {};
   return buildMetadata({
@@ -35,7 +37,8 @@ export default async function Page({
   params: Params;
   searchParams: SearchParams;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlugParam(rawSlug);
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const repo = getContentRepository();

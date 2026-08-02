@@ -9,7 +9,7 @@
     },
     {
       "name": "cms",
-      "cwd": "F:/DEV/parag/parag-payloadcms",
+      "cwd": "C:/Users/rezap/Documents/GitHub/parag-payloadcms",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3004

@@ -132,12 +132,30 @@ export interface BlogCategory {
  * (components/blog/PostBody). Later, Payload's Lexical output maps onto this
  * same union so pages never change.
  */
+/**
+ * Inline run inside a block. Only the CMS-backed repository produces these; the
+ * bundled file content predates them and still ships plain strings, which is why
+ * every block below keeps its `text`/`items` and carries the rich form beside it.
+ * Renderers prefer `rich` when it is there and fall back to the string.
+ */
+export type InlineNode =
+  | {
+      type: "text";
+      text: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      code?: boolean;
+    }
+  | { type: "link"; url: string; newTab?: boolean; children: InlineNode[] };
+
 export type PostBlock =
-  | { type: "paragraph"; text: string }
-  | { type: "heading"; level: 2 | 3; text: string }
-  | { type: "quote"; text: string; cite?: string }
+  | { type: "paragraph"; text: string; rich?: InlineNode[] }
+  | { type: "heading"; level: 2 | 3; text: string; rich?: InlineNode[] }
+  | { type: "quote"; text: string; cite?: string; rich?: InlineNode[] }
   | { type: "image"; src: string; alt: string; caption?: string }
-  | { type: "list"; ordered?: boolean; items: string[] }
+  | { type: "list"; ordered?: boolean; items: string[]; richItems?: InlineNode[][] }
   | { type: "code"; lang?: string; code: string }
   | { type: "divider" };
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContentRepository } from "@/content/repository";
 import { buildMetadata } from "@/lib/seo";
+import { decodeSlugParam } from "@/lib/slug";
 import { categoryTitleOf } from "@/content/data/blog";
 import { estimateReadingMinutes } from "@/lib/format";
 import { Container, Section } from "@/components/ui/Section";
@@ -10,6 +11,7 @@ import { PostBody } from "@/components/blog/PostBody";
 import { PostMeta, AuthorAvatar } from "@/components/blog/PostMeta";
 import { ShareButtons } from "@/components/blog/ShareButtons";
 import { RelatedPosts } from "@/components/blog/RelatedPosts";
+import { PostComments } from "@/components/blog/PostComments";
 
 type Params = Promise<{ slug: string }>;
 
@@ -20,14 +22,16 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlugParam(rawSlug);
   const post = await getContentRepository().getPost(slug);
   if (!post) return {};
   return buildMetadata(post.coverImage ? { ...post.seo, ogImage: post.coverImage } : post.seo);
 }
 
 export default async function Page({ params }: { params: Params }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlugParam(rawSlug);
   const repo = getContentRepository();
   const post = await repo.getPost(slug);
   if (!post) notFound();
@@ -134,6 +138,9 @@ export default async function Page({ params }: { params: Params }) {
               {post.author.bio && <p className="mt-1 text-sm leading-7 text-text-muted">{post.author.bio}</p>}
             </div>
           </div>
+
+          {/* Comments — read and written straight against the CMS, moderated there. */}
+          <PostComments postSlug={post.slug} />
         </div>
       </Section>
 

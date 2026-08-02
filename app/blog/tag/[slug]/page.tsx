@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getContentRepository } from "@/content/repository";
 import { buildMetadata } from "@/lib/seo";
+import { decodeSlugParam } from "@/lib/slug";
 import { Hero } from "@/components/sections/Hero";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/Reveal";
@@ -16,7 +17,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlugParam(rawSlug);
   const tag = decodeURIComponent(slug);
   return buildMetadata({
     title: `#${tag} | بلاگ پاراگ`,
@@ -32,7 +34,8 @@ export default async function Page({
   params: Params;
   searchParams: SearchParams;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeSlugParam(rawSlug);
   const { page: pageParam } = await searchParams;
   const tag = decodeURIComponent(slug);
   const page = Math.max(1, Number(pageParam) || 1);
