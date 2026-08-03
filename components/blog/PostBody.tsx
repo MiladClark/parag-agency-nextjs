@@ -34,7 +34,7 @@ function InlineNodeView({ node }: { node: InlineNode }) {
     return (
       <a
         href={node.url}
-        className="font-medium text-accent underline decoration-accent/40 underline-offset-4 transition hover:decoration-accent"
+        className="font-medium text-accent no-underline transition hover:text-accent/80"
         {...(node.newTab || external
           ? { target: "_blank", rel: "noopener noreferrer" }
           : {})}
