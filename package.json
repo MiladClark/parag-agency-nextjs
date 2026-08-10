@@ -2,10 +2,16 @@
   "name": "parag-agency",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
-    "dev": "next dev -p 3005",
+    "dev": "next dev -p 3602",
     "build": "next build",
-    "start": "next start -p 3005",
+    "start": "bash start-aapanel.sh",
+    "start:next": "next start -p 3602 -H 0.0.0.0",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "eslint"
   },
   "dependencies": {
