@@ -1,7 +1,11 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# =============================================================================
+# parag-agency — Git ignore
+# =============================================================================
+# workflow: کد + .env.example → GitHub → روی سرور pull → cp .env.example .env.local
+# =============================================================================
 
-# dependencies
-/node_modules
+# ── وابستگی‌ها ────────────────────────────────────────────────────────────────
+/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,33 +14,34 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# ── خروجی build ───────────────────────────────────────────────────────────────
 /.next/
 /out/
+/build/
 
-# production
-/build
+# ── متغیرهای محیطی (حساس) ─────────────────────────────────────────────────────
+# PAYLOAD_URL, NEXT_PUBLIC_TENANT, PREVIEW_SECRET — فقط روی سرور/لوکال
+.env
+.env.*
+.env*.local
+!.env.example
 
-# misc
+# ── تست ───────────────────────────────────────────────────────────────────────
+/coverage/
+
+# ── IDE / سیستم‌عامل ─────────────────────────────────────────────────────────
 .DS_Store
-*.pem
+Thumbs.db
 
-# debug
+# ── لاگ و کلید ────────────────────────────────────────────────────────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.pem
+*.key
 
-# env files (keep .env.example tracked)
-.env
-.env*.local
-
-# vercel
-.vercel
-
-# typescript
+# ── TypeScript / deploy platforms ─────────────────────────────────────────────
 *.tsbuildinfo
 next-env.d.ts
+.vercel

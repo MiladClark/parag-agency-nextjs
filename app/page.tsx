@@ -29,12 +29,17 @@ export default async function Page() {
     repo.listPosts({ page: 1, perPage: 4 }),
   ]);
 
-  // Until the CMS has posts for this tenant, keep the homepage section populated
-  // from the bundled file content so the layout never collapses to empty.
+  // Homepage needs four posts (one featured + three sidebar). When the CMS has
+  // fewer, top up from bundled file content so the layout never collapses.
+  const filePosts = (await fileRepository.listPosts({ page: 1, perPage: 4 })).posts;
+  const cmsSlugs = new Set(blog.posts.map((p) => p.slug));
   const latestPosts =
-    blog.posts.length > 0
-      ? blog.posts
-      : (await fileRepository.listPosts({ page: 1, perPage: 4 })).posts;
+    blog.posts.length >= 4
+      ? blog.posts.slice(0, 4)
+      : [
+          ...blog.posts,
+          ...filePosts.filter((p) => !cmsSlugs.has(p.slug)),
+        ].slice(0, 4);
 
   return (
     <>
