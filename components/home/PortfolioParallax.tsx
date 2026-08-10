@@ -3,7 +3,8 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import type { PortfolioItem } from "../../content/types";
-import { Section, Eyebrow } from "../ui/Section";
+import { Section } from "../ui/Section";
+import { SectionIntro } from "../ui/SectionIntro";
 import { ButtonLink } from "../ui/Button";
 import { TiltCard } from "../ui/TiltCard";
 import { PortfolioCard } from "../cards/PortfolioCard";
@@ -19,13 +20,13 @@ export function PortfolioParallax({ portfolio }: { portfolio: PortfolioItem[] })
 
   return (
     <Section>
-      <div className="mb-16 flex flex-col items-center gap-4 text-center">
-        <Eyebrow>نمونه کارها</Eyebrow>
-        <h2 className="text-3xl font-bold text-text sm:text-4xl lg:text-5xl">داستان‌هایی از رشد</h2>
-        <p className="max-w-xl text-base leading-8 text-text-muted">
-          نگاهی به چند پروژه‌ای که با هم به نتیجه رساندیم.
-        </p>
-      </div>
+      <SectionIntro
+        className="mb-14 sm:mb-16"
+        label="نمونه‌کارها"
+        title="داستان‌هایی از"
+        accent="رشد واقعی"
+        body="نگاهی به چند پروژه‌ای که از ایده تا نتیجه جلو بردیم."
+      />
 
       <div ref={ref} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item, i) => (

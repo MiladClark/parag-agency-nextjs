@@ -1,21 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CornerDownLeft, MessageSquare, ShieldCheck, X } from "lucide-react";
+import { CornerDownLeft, MessageSquare, ShieldCheck, Star, X } from "lucide-react";
 import { CURRENT_TENANT } from "../../content/tenant";
 import { formatJalaliDate, toPersianDigits } from "../../lib/format";
+import { formatRatingAverage, type RatingSummary } from "../../lib/ratings";
 import { CaptchaBox, type CaptchaHandle, type CaptchaProvider } from "./CaptchaBox";
-
-// Comments for one article, synced with the Payload CMS.
-//
-// Reads and writes go to the CMS's public site endpoints, so a submission lands
-// in the panel's «دیدگاه‌ها» queue as `pending` and only appears here once a
-// moderator approves it. Nothing is stored on this site.
-//
-// Threading is one level deep on purpose: the API only accepts a `parent` that
-// is itself an approved top-level-or-not comment on the same post, and a flat
-// reply list stays readable on a phone. A reply to a reply is attached to the
-// same thread rather than nesting further.
+import { StarRow } from "./StarRow";
 
 const PAYLOAD = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3601";
 
@@ -26,6 +17,7 @@ type ApiComment = {
   body: string;
   adminReply: string | null;
   parent: number | null;
+  rating: number | null;
   createdAt: string;
 };
 
@@ -41,7 +33,7 @@ type FormState = {
 const EMPTY_FORM: FormState = { authorEmail: "", authorName: "", authorWebsite: "", body: "" };
 
 const inputClass =
-  "w-full rounded-xl border border-border bg-panel px-4 py-2.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent/60 focus-visible:ring-2 focus-visible:ring-accent/30";
+  "w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent/60 focus:outline-none focus-visible:outline-none focus-visible:ring-0";
 
 function Avatar({ name }: { name: string }) {
   return (
@@ -65,8 +57,8 @@ function CommentCard({
 }) {
   return (
     <article
-      className={`flex gap-3 rounded-2xl border border-border bg-panel p-4 sm:p-5 ${
-        isReply ? "bg-surface/60" : ""
+      className={`flex gap-3 rounded-2xl border border-border p-4 sm:p-5 ${
+        isReply ? "bg-surface/60" : "bg-panel"
       }`}
     >
       <Avatar name={comment.authorName} />
@@ -88,6 +80,9 @@ function CommentCard({
           <time className="text-xs text-text-muted" dateTime={comment.createdAt}>
             {formatJalaliDate(comment.createdAt)}
           </time>
+          {!isReply && comment.rating != null && comment.rating >= 1 && (
+            <StarRow rating={comment.rating} />
+          )}
         </header>
 
         <p className="whitespace-pre-line text-sm leading-8 text-text-muted">{comment.body}</p>
@@ -117,13 +112,77 @@ function CommentCard({
   );
 }
 
-export function PostComments({ postSlug }: { postSlug: string }) {
+function FormStars({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  disabled?: boolean;
+}) {
+  const [hover, setHover] = useState(0);
+  const display = hover || value;
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm font-medium text-text">امتیاز شما به این مطلب (اختیاری)</span>
+      <div
+        className="flex items-center gap-1"
+        onMouseLeave={() => setHover(0)}
+        role="radiogroup"
+        aria-label="امتیاز اختیاری"
+      >
+        {Array.from({ length: 5 }, (_, i) => {
+          const n = i + 1;
+          const active = n <= display;
+          return (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={value === n}
+              disabled={disabled}
+              aria-label={`${toPersianDigits(n)} ستاره`}
+              onMouseEnter={() => setHover(n)}
+              onClick={() => onChange(value === n ? 0 : n)}
+              className="rounded-lg p-0.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            >
+              <Star
+                className={`h-6 w-6 ${active ? "fill-accent text-accent" : "text-border"}`}
+              />
+            </button>
+          );
+        })}
+        {value > 0 && (
+          <button
+            type="button"
+            onClick={() => onChange(0)}
+            className="ms-2 text-xs text-text-muted hover:text-accent"
+          >
+            حذف
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function PostComments({
+  postSlug,
+  initialRating,
+}: {
+  postSlug: string;
+  initialRating?: RatingSummary | null;
+}) {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [total, setTotal] = useState(0);
   const [allowComments, setAllowComments] = useState(true);
+  const [allowRatings, setAllowRatings] = useState(true);
+  const [ratingSummary, setRatingSummary] = useState<RatingSummary | null>(initialRating ?? null);
   const [loading, setLoading] = useState(true);
 
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [formRating, setFormRating] = useState(0);
   const [replyTo, setReplyTo] = useState<ApiComment | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +195,6 @@ export function PostComments({ postSlug }: { postSlug: string }) {
   const captchaRef = useRef<CaptchaHandle>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  // ── Load the approved comments ────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
       const res = await fetch(
@@ -144,9 +202,17 @@ export function PostComments({ postSlug }: { postSlug: string }) {
         { cache: "no-store" },
       );
       if (!res.ok) throw new Error("failed");
-      const data = (await res.json()) as { allowComments: boolean; total: number; comments: ApiComment[] };
+      const data = (await res.json()) as {
+        allowComments: boolean;
+        allowRatings?: boolean;
+        total: number;
+        comments: ApiComment[];
+        ratingSummary?: RatingSummary;
+      };
       setAllowComments(data.allowComments !== false);
+      setAllowRatings(data.allowRatings !== false);
       setTotal(data.total ?? data.comments.length);
+      if (data.ratingSummary) setRatingSummary(data.ratingSummary);
 
       const byId = new Map(data.comments.map((c) => [c.id, c]));
       const roots: Thread[] = [];
@@ -161,7 +227,6 @@ export function PostComments({ postSlug }: { postSlug: string }) {
       }
       for (const c of data.comments) {
         if (c.parent === null) continue;
-        // Walk up to the thread root so a reply-to-a-reply still lands somewhere.
         let anchor: number | null = c.parent;
         const seen = new Set<number>();
         while (anchor !== null && !index.has(anchor) && !seen.has(anchor)) {
@@ -183,7 +248,6 @@ export function PostComments({ postSlug }: { postSlug: string }) {
     void load();
   }, [load]);
 
-  // ── Whether this site requires a captcha on the form ──────────────────────
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
@@ -200,8 +264,7 @@ export function PostComments({ postSlug }: { postSlug: string }) {
           setCaptcha({ provider: data.captcha.provider, siteKey: data.captcha.siteKey ?? null });
         }
       } catch {
-        // No captcha configured, or the CMS is unreachable — the server is the
-        // authority either way and will reject a missing token if it needs one.
+        /* ignore */
       }
     })();
     return () => controller.abort();
@@ -209,6 +272,7 @@ export function PostComments({ postSlug }: { postSlug: string }) {
 
   const startReply = useCallback((comment: ApiComment) => {
     setReplyTo(comment);
+    setFormRating(0);
     setDone(false);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, []);
@@ -237,6 +301,7 @@ export function PostComments({ postSlug }: { postSlug: string }) {
           authorEmail: form.authorEmail.trim(),
           authorWebsite: form.authorWebsite.trim() || undefined,
           body: form.body.trim(),
+          rating: !replyTo && formRating > 0 ? formRating : undefined,
           captchaToken,
         }),
       });
@@ -254,6 +319,7 @@ export function PostComments({ postSlug }: { postSlug: string }) {
 
       captchaRef.current?.reset();
       setForm(EMPTY_FORM);
+      setFormRating(0);
       setReplyTo(null);
       setDone(true);
     } catch {
@@ -270,18 +336,39 @@ export function PostComments({ postSlug }: { postSlug: string }) {
 
   return (
     <section id="comments" className="flex flex-col gap-6">
-      <h2 className="flex items-center gap-2 text-xl font-bold text-text sm:text-2xl">
-        <MessageSquare className="h-5 w-5 text-accent" />
-        {heading}
-      </h2>
+      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+        <h2 className="flex items-center gap-2 text-xl font-bold text-text sm:text-2xl">
+          <MessageSquare className="h-5 w-5 text-accent" />
+          {heading}
+        </h2>
+        {ratingSummary && ratingSummary.count > 0 && (
+          <a
+            href="#rating"
+            className="flex items-center gap-1.5 text-sm text-text-muted transition-colors hover:text-accent"
+          >
+            <Star className="h-4 w-4 fill-accent text-accent" />
+            {formatRatingAverage(ratingSummary.average)} · {toPersianDigits(ratingSummary.count)} رأی
+          </a>
+        )}
+      </header>
 
-      {/* ── List ── */}
       {loading ? (
-        <p className="text-sm text-text-muted">در حال بارگذاری دیدگاه‌ها…</p>
+        <div className="flex flex-col gap-3">
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className="h-28 animate-pulse rounded-2xl border border-border bg-panel"
+              aria-hidden
+            />
+          ))}
+          <p className="sr-only">در حال بارگذاری دیدگاه‌ها</p>
+        </div>
       ) : threads.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-text-muted">
-          هنوز دیدگاهی ثبت نشده. اولین نفر باشید.
-        </p>
+        <div className="rounded-2xl border border-dashed border-border bg-panel/50 px-6 py-10 text-center">
+          <MessageSquare className="mx-auto mb-3 h-8 w-8 text-accent/60" />
+          <p className="text-sm font-medium text-text">هنوز دیدگاهی ثبت نشده</p>
+          <p className="mt-1 text-sm text-text-muted">اولین نفر باشید و نظرتان را بنویسید.</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-4">
           {threads.map((thread) => (
@@ -299,7 +386,6 @@ export function PostComments({ postSlug }: { postSlug: string }) {
         </div>
       )}
 
-      {/* ── Form ── */}
       {!allowComments ? (
         <p className="rounded-2xl border border-border bg-panel p-5 text-center text-sm text-text-muted">
           ارسال دیدگاه برای این مقاله بسته است.
@@ -338,41 +424,60 @@ export function PostComments({ postSlug }: { postSlug: string }) {
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <input
-              className={inputClass}
-              placeholder="نام شما *"
-              value={form.authorName}
-              onChange={(e) => setForm({ ...form, authorName: e.target.value })}
-              maxLength={80}
-              autoComplete="name"
-            />
-            <input
-              className={inputClass}
-              placeholder="ایمیل *"
-              type="email"
-              dir="ltr"
-              value={form.authorEmail}
-              onChange={(e) => setForm({ ...form, authorEmail: e.target.value })}
-              autoComplete="email"
-            />
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-text-muted">نام *</span>
+              <input
+                className={inputClass}
+                placeholder="نام شما"
+                value={form.authorName}
+                onChange={(e) => setForm({ ...form, authorName: e.target.value })}
+                maxLength={80}
+                autoComplete="name"
+                required
+              />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-text-muted">ایمیل *</span>
+              <input
+                className={inputClass}
+                placeholder="email@example.com"
+                type="email"
+                dir="ltr"
+                value={form.authorEmail}
+                onChange={(e) => setForm({ ...form, authorEmail: e.target.value })}
+                autoComplete="email"
+                required
+              />
+            </label>
           </div>
 
-          <input
-            className={inputClass}
-            placeholder="وب‌سایت (اختیاری)"
-            type="url"
-            dir="ltr"
-            value={form.authorWebsite}
-            onChange={(e) => setForm({ ...form, authorWebsite: e.target.value })}
-          />
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-text-muted">وب‌سایت (اختیاری)</span>
+            <input
+              className={inputClass}
+              placeholder="https://"
+              type="url"
+              dir="ltr"
+              value={form.authorWebsite}
+              onChange={(e) => setForm({ ...form, authorWebsite: e.target.value })}
+            />
+          </label>
 
-          <textarea
-            className={`${inputClass} min-h-32 resize-y leading-8`}
-            placeholder="متن دیدگاه *"
-            value={form.body}
-            onChange={(e) => setForm({ ...form, body: e.target.value })}
-            maxLength={4000}
-          />
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-text-muted">متن دیدگاه *</span>
+            <textarea
+              className={`${inputClass} min-h-32 resize-y leading-8`}
+              placeholder="نظر خود را بنویسید…"
+              value={form.body}
+              onChange={(e) => setForm({ ...form, body: e.target.value })}
+              maxLength={4000}
+              required
+            />
+          </label>
+
+          {!replyTo && allowRatings && (
+            <FormStars value={formRating} onChange={setFormRating} disabled={sending} />
+          )}
 
           <CaptchaBox ref={captchaRef} provider={captcha.provider} siteKey={captcha.siteKey} />
 
@@ -383,7 +488,7 @@ export function PostComments({ postSlug }: { postSlug: string }) {
             <button
               type="submit"
               disabled={sending}
-              className="rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="relative isolate overflow-hidden rounded-full bg-linear-to-b from-accent to-accent-hover px-6 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_12px_28px_-10px_color-mix(in_srgb,var(--accent)_60%,transparent)] transition-all duration-300 after:absolute after:inset-0 after:-z-10 after:-translate-x-[150%] after:bg-linear-to-r after:from-transparent after:via-white/25 after:to-transparent after:transition-transform after:duration-700 after:ease-out hover:brightness-110 hover:after:translate-x-[150%] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {sending ? "در حال ارسال…" : replyTo ? "ارسال پاسخ" : "ارسال دیدگاه"}
             </button>

@@ -1,4 +1,5 @@
 import type { InlineNode, PostBlock } from "../../content/types";
+import { buildHeadingIds } from "../../lib/toc";
 
 // Typed renderer for the structured post body. Each PostBlock maps to a styled
 // element.
@@ -8,10 +9,18 @@ import type { InlineNode, PostBlock } from "../../content/types";
 // CMS produces). Rich wins when present — that is what keeps links clickable
 // and bold/italic visible instead of flattening the article into grey text.
 export function PostBody({ blocks }: { blocks: PostBlock[] }) {
+  const headingIds = buildHeadingIds(blocks);
+  const leadIndex = blocks.findIndex((b) => b.type === "paragraph");
+
   return (
     <div className="flex flex-col gap-6">
       {blocks.map((block, i) => (
-        <Block key={i} block={block} />
+        <Block
+          key={i}
+          block={block}
+          headingId={headingIds[i] || undefined}
+          isLead={i === leadIndex}
+        />
       ))}
     </div>
   );
@@ -64,10 +73,23 @@ function InlineNodeView({ node }: { node: InlineNode }) {
   return <>{content}</>;
 }
 
-function Block({ block }: { block: PostBlock }) {
+function Block({
+  block,
+  headingId,
+  isLead = false,
+}: {
+  block: PostBlock;
+  headingId?: string;
+  isLead?: boolean;
+}) {
   switch (block.type) {
     case "paragraph":
-      return (
+      // The opening paragraph gets editorial "lead" treatment.
+      return isLead ? (
+        <p className="text-lg leading-9 text-text sm:text-xl sm:leading-10">
+          <Inline nodes={block.rich} fallback={block.text} />
+        </p>
+      ) : (
         <p className="text-base leading-9 text-text-muted">
           <Inline nodes={block.rich} fallback={block.text} />
         </p>
@@ -75,11 +97,17 @@ function Block({ block }: { block: PostBlock }) {
 
     case "heading":
       return block.level === 2 ? (
-        <h2 className="mt-4 text-2xl font-bold leading-relaxed text-text sm:text-3xl">
+        <h2
+          id={headingId}
+          className="relative mt-6 scroll-mt-28 ps-4 text-2xl font-bold leading-relaxed text-text before:absolute before:inset-y-1 before:start-0 before:w-1 before:rounded-full before:bg-accent sm:text-3xl"
+        >
           <Inline nodes={block.rich} fallback={block.text} />
         </h2>
       ) : (
-        <h3 className="mt-2 text-xl font-bold leading-relaxed text-text sm:text-2xl">
+        <h3
+          id={headingId}
+          className="mt-3 scroll-mt-28 text-xl font-bold leading-relaxed text-text sm:text-2xl"
+        >
           <Inline nodes={block.rich} fallback={block.text} />
         </h3>
       );
@@ -90,15 +118,23 @@ function Block({ block }: { block: PostBlock }) {
           <p className="text-lg font-medium leading-9 text-text">
             «<Inline nodes={block.rich} fallback={block.text} />»
           </p>
-          {block.cite && <cite className="mt-3 block text-sm not-italic text-text-muted">— {block.cite}</cite>}
+          {block.cite && (
+            <cite className="mt-3 block text-sm not-italic text-text-muted">- {block.cite}</cite>
+          )}
         </blockquote>
       );
 
     case "image":
       return (
-        <figure className="flex flex-col gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={block.src} alt={block.alt} className="w-full rounded-2xl border border-border" />
+        <figure className="my-2 flex flex-col gap-3">
+          <div className="overflow-hidden rounded-2xl border border-border shadow-[0_20px_50px_-28px_rgba(0,0,0,0.5)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={block.src}
+              alt={block.alt}
+              className="w-full transition-transform duration-700 ease-out hover:scale-[1.015]"
+            />
+          </div>
           {block.caption && (
             <figcaption className="text-center text-sm text-text-muted">{block.caption}</figcaption>
           )}
@@ -135,7 +171,13 @@ function Block({ block }: { block: PostBlock }) {
       );
 
     case "divider":
-      return <hr className="border-border" />;
+      return (
+        <div className="my-4 flex items-center justify-center gap-2" role="separator">
+          <span className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
+          <span className="h-1.5 w-1.5 rounded-full bg-accent/50" />
+          <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+        </div>
+      );
 
     default:
       return null;

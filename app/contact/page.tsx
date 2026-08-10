@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { getContentRepository } from "@/content/repository";
 import { buildMetadata } from "@/lib/seo";
-import { Hero } from "@/components/sections/Hero";
-import { Section } from "@/components/ui/Section";
+import { ContactHero } from "@/components/contact/ContactHero";
+import { ContactChannels } from "@/components/contact/ContactChannels";
 import { ContactForm } from "@/components/ContactForm";
-import { Icon } from "@/components/ui/Icon";
 
 export async function generateMetadata(): Promise<Metadata> {
   const repo = getContentRepository();
@@ -19,77 +18,32 @@ export default async function Page() {
   const { contact, social } = settings;
 
   return (
-    <>
-      <Hero hero={page.hero} compact />
-      <Section className="!pt-4">
-        <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr]">
-          <div className="rounded-3xl border border-border bg-panel p-7 sm:p-10">
-            <ContactForm />
+    <div className="relative pb-10 sm:pb-14">
+      <ContactHero title={page.hero.title} subtitle={page.hero.subtitle} />
+
+      <section className="relative px-3 sm:px-5">
+        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] border border-border/70 bg-surface/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_30px_80px_-30px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+          <div
+            className="pointer-events-none absolute -top-40 start-1/4 h-80 w-80 rounded-full bg-accent/10 blur-[120px]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -bottom-40 end-0 h-72 w-72 rounded-full bg-accent/[0.07] blur-[110px]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-x-16 top-0 h-px bg-linear-to-l from-transparent via-accent/40 to-transparent"
+            aria-hidden
+          />
+
+          <div className="relative grid gap-8 p-5 sm:gap-10 sm:p-8 lg:grid-cols-[1.35fr_1fr] lg:gap-12 lg:p-10">
+            <div className="rounded-[1.75rem] border border-border/60 bg-panel p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-7 lg:p-8">
+              <ContactForm />
+            </div>
+            <ContactChannels contact={contact} social={social} />
           </div>
-
-          <aside className="flex flex-col gap-6">
-            <div className="flex flex-col gap-5 rounded-3xl border border-border bg-panel p-7">
-              <h3 className="text-lg font-bold text-text">راه‌های ارتباطی</h3>
-              {contact.phone && <ContactRow icon="phone" label="تلفن" value={contact.phone} />}
-              {contact.email && (
-                <ContactRow
-                  icon="mail"
-                  label="ایمیل"
-                  value={contact.email}
-                  href={`mailto:${contact.email}`}
-                />
-              )}
-              {contact.address && <ContactRow icon="map" label="آدرس" value={contact.address} />}
-            </div>
-
-            <div className="flex items-center gap-2 rounded-3xl border border-border bg-panel p-7">
-              {social.map((s) => (
-                <a
-                  key={s.href}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.label}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-text-muted transition-colors hover:border-accent/40 hover:text-accent"
-                >
-                  <Icon name={s.icon} className="text-lg" />
-                </a>
-              ))}
-            </div>
-          </aside>
         </div>
-      </Section>
-    </>
-  );
-}
-
-function ContactRow({
-  icon,
-  label,
-  value,
-  href,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  href?: string;
-}) {
-  const content = (
-    <div className="flex items-center gap-3">
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-lg text-accent">
-        <Icon name={icon} />
-      </span>
-      <div className="flex flex-col">
-        <span className="text-xs text-text-muted">{label}</span>
-        <span className="text-sm text-text">{value}</span>
-      </div>
+      </section>
     </div>
-  );
-  return href ? (
-    <a href={href} className="transition-opacity hover:opacity-80">
-      {content}
-    </a>
-  ) : (
-    content
   );
 }

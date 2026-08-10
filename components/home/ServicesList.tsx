@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import type { Service } from "../../content/types";
-import { Section, Eyebrow } from "../ui/Section";
+import { Section } from "../ui/Section";
+import { SectionIntro } from "../ui/SectionIntro";
 import { Icon } from "../ui/Icon";
 import { toPersianDigits } from "../../lib/format";
 
@@ -15,15 +16,14 @@ export function ServicesList({ services }: { services: Service[] }) {
 
   return (
     <Section>
-      <div className="mb-12 flex flex-col items-start gap-4">
-        <Eyebrow>خدمات ما</Eyebrow>
-        <h2 className="text-3xl font-bold text-text sm:text-4xl lg:text-5xl">
-          هرآنچه برای رشد دیجیتال نیاز دارید
-        </h2>
-        <p className="max-w-2xl text-base leading-8 text-text-muted">
-          از اولین قدم استراتژی تا اجرای کمپین و تحلیل نتایج، در هر مرحله کنار شما هستیم.
-        </p>
-      </div>
+      <SectionIntro
+        className="mb-12"
+        align="start"
+        label="خدمات"
+        title="هرآنچه برای رشد دیجیتال"
+        accent="نیاز دارید"
+        body="از اولین قدم استراتژی تا اجرای کمپین و تحلیل نتایج، در هر مرحله کنار شما هستیم."
+      />
 
       <div className="border-t border-border/60">
         {services.map((service, i) => {

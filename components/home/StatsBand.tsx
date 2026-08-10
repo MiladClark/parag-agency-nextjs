@@ -3,18 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, motion, useInView } from "motion/react";
 import { heroStats, type HeroStat } from "../../content/data/home";
-import { Section, Eyebrow } from "../ui/Section";
+import { Section } from "../ui/Section";
+import { SectionIntro } from "../ui/SectionIntro";
 import { toPersianDigits } from "../../lib/format";
 
 export function StatsBand() {
   return (
     <Section>
-      <div className="mb-16 flex flex-col items-center gap-4 text-center">
-        <Eyebrow>چرا پاراگ</Eyebrow>
-        <h2 className="text-3xl font-bold text-text sm:text-4xl lg:text-5xl">
-          نتیجه‌ای که قابل اندازه‌گیری است
-        </h2>
-      </div>
+      <SectionIntro
+        className="mb-14 sm:mb-16"
+        title="نتیجه‌ای که"
+        accent="قابل اندازه‌گیری است"
+        body="اعداد واقعی از مسیرهایی که با برندها ساختیم."
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4">
         {heroStats.map((stat, i) => (

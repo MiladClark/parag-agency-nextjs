@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { journeySteps } from "../../content/data/home";
-import { Section, Eyebrow } from "../ui/Section";
+import { Section } from "../ui/Section";
+import { SectionIntro } from "../ui/SectionIntro";
 import { Icon } from "../ui/Icon";
 
 // Pinned scrollytelling: a sticky 3D visual reacts to the active step as the
@@ -14,12 +15,12 @@ export function JourneySteps() {
 
   return (
     <Section>
-      <div className="mb-20 flex flex-col items-center gap-4 text-center">
-        <Eyebrow>مسیر همکاری</Eyebrow>
-        <h2 className="text-3xl font-bold text-text sm:text-4xl lg:text-5xl">
-          چطور برند شما را رشد می‌دهیم
-        </h2>
-      </div>
+      <SectionIntro
+        className="mb-16 sm:mb-20"
+        title="چطور برند شما را"
+        accent="رشد می‌دهیم"
+        body="از کشف تا بهینه‌سازی، یک مسیر روشن و مشترک برای رسیدن به نتیجه."
+      />
 
       <div className="grid gap-12 lg:grid-cols-2">
         {/* Steps with timeline rail (right in RTL) */}

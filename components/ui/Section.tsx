@@ -21,13 +21,49 @@ export function Section({
   );
 }
 
-export function Eyebrow({ children }: { children: React.ReactNode }) {
+type Align = "center" | "start";
+
+/** Editorial rail label — replaces the old pill+dot eyebrow. */
+export function SectionLabel({
+  children,
+  align = "center",
+  className = "",
+}: {
+  children: React.ReactNode;
+  align?: Align;
+  className?: string;
+}) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft px-4 py-1.5 text-sm font-medium text-accent">
-      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-      {children}
+    <span
+      className={[
+        "inline-flex items-center gap-3 text-[11px] font-bold tracking-[0.22em]",
+        className,
+      ].join(" ")}
+    >
+      {align === "start" ? (
+        <span className="h-px w-8 bg-linear-to-l from-accent to-transparent" aria-hidden />
+      ) : (
+        <span className="h-px w-8 bg-linear-to-l from-transparent to-accent/80" aria-hidden />
+      )}
+      <span className="bg-linear-to-l from-accent via-accent-hover to-accent bg-clip-text text-transparent">
+        {children}
+      </span>
+      {align === "center" && (
+        <span className="h-px w-8 bg-linear-to-l from-accent/80 to-transparent" aria-hidden />
+      )}
     </span>
   );
+}
+
+/** Alias kept for older call sites. */
+export function Eyebrow({
+  children,
+  align = "start",
+}: {
+  children: React.ReactNode;
+  align?: Align;
+}) {
+  return <SectionLabel align={align}>{children}</SectionLabel>;
 }
 
 export function SectionHeading({
@@ -35,20 +71,57 @@ export function SectionHeading({
   title,
   body,
   align = "center",
+  accent,
 }: {
   eyebrow?: string;
   title?: string;
   body?: string;
-  align?: "center" | "start";
+  align?: Align;
+  accent?: string;
 }) {
-  const alignment = align === "center" ? "items-center text-center mx-auto" : "items-start text-start";
+  if (!title) return null;
+  const centered = align === "center";
+
   return (
-    <div className={`flex max-w-2xl flex-col gap-4 ${alignment}`}>
-      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-      {title && (
-        <h2 className="text-3xl font-bold leading-tight text-text sm:text-4xl">{title}</h2>
+    <div
+      className={[
+        "relative flex flex-col gap-4",
+        centered ? "mx-auto items-center text-center" : "items-start text-start",
+      ].join(" ")}
+    >
+      {eyebrow && <SectionLabel align={align}>{eyebrow}</SectionLabel>}
+      <h2
+        className={[
+          "max-w-3xl text-3xl font-black leading-[1.2] tracking-tight text-text sm:text-4xl lg:text-5xl lg:leading-[1.15]",
+          centered ? "mx-auto" : "",
+        ].join(" ")}
+      >
+        {title}
+        {accent ? (
+          <>
+            {" "}
+            <span className="text-gradient">{accent}</span>
+          </>
+        ) : null}
+      </h2>
+      {body && (
+        <p
+          className={[
+            "max-w-xl text-sm leading-8 text-text-muted sm:text-base",
+            centered ? "mx-auto" : "",
+          ].join(" ")}
+        >
+          {body}
+        </p>
       )}
-      {body && <p className="text-base leading-8 text-text-muted">{body}</p>}
+      <span
+        className={
+          centered
+            ? "mt-1 h-px w-24 bg-linear-to-l from-transparent via-accent/70 to-transparent"
+            : "mt-1 h-px w-20 self-start bg-linear-to-l from-accent/80 to-transparent"
+        }
+        aria-hidden
+      />
     </div>
   );
 }

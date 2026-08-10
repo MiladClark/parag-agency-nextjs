@@ -107,8 +107,32 @@ export interface PortfolioItem {
   client?: string;
   /** Tailwind gradient classes used as a stand-in cover until real images exist. */
   cover: string;
+  /** Optional real cover image under /public */
+  coverImage?: string;
   summary: string;
   tags: string[];
+}
+
+export interface PortfolioGalleryImage {
+  src: string;
+  alt: string;
+  caption?: string;
+}
+
+export interface PortfolioCaseStudy extends PortfolioItem {
+  seo: SeoMeta;
+  year?: string;
+  role?: string;
+  timeline?: string;
+  platform?: string;
+  heroImage: string;
+  overview: string[];
+  challenge: { title: string; body: string };
+  solution: { title: string; body: string };
+  features: { title: string; body: string; image: string }[];
+  stack: string[];
+  results: { value: string; label: string }[];
+  gallery: PortfolioGalleryImage[];
 }
 
 /* ---------------- Blog ---------------- */

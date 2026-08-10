@@ -1,21 +1,27 @@
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
-// Standard radius (rounded-lg) matching the CoachOps design system.
+// Pill buttons with a glass/glow language matching the floating header & footer.
+// A sheen sweeps across primary/danger on hover via the ::after overlay.
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
+  "group/btn relative isolate inline-flex items-center justify-center gap-2 overflow-hidden rounded-full font-bold transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
+
+const sheen =
+  "after:absolute after:inset-0 after:-z-10 after:-translate-x-[150%] after:bg-linear-to-r after:from-transparent after:via-white/25 after:to-transparent after:transition-transform after:duration-700 after:ease-out hover:after:translate-x-[150%]";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-white hover:bg-accent-hover shadow-lg shadow-accent/20",
-  secondary: "bg-panel text-text border border-border hover:bg-panel-hover",
-  ghost: "bg-transparent text-text-muted hover:text-text hover:bg-panel",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+  primary: `bg-linear-to-b from-accent to-accent-hover text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_12px_28px_-10px_color-mix(in_srgb,var(--accent)_60%,transparent)] hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_18px_38px_-12px_color-mix(in_srgb,var(--accent)_75%,transparent)] hover:brightness-110 ${sheen}`,
+  secondary:
+    "border border-border/80 bg-panel/60 text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm hover:-translate-y-0.5 hover:border-accent/40 hover:bg-panel hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_30px_-16px_rgba(0,0,0,0.6)]",
+  ghost:
+    "bg-transparent text-text-muted hover:bg-panel/70 hover:text-text hover:shadow-[inset_0_0_0_1px_var(--border)]",
+  danger: `bg-linear-to-b from-red-500 to-red-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_12px_28px_-10px_rgba(220,38,38,0.7)] hover:-translate-y-0.5 hover:brightness-110 ${sheen}`,
 };
 
 const sizes: Record<Size, string> = {
-  sm: "px-3 py-1.5 text-sm",
-  md: "px-4 py-2 text-sm",
-  lg: "px-6 py-3 text-base",
+  sm: "px-4 py-1.5 text-sm",
+  md: "px-5 py-2.5 text-sm",
+  lg: "px-7 py-3.5 text-base",
 };
 
 type Common = { variant?: Variant; size?: Size; className?: string; children: React.ReactNode };

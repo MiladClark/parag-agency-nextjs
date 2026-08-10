@@ -5,7 +5,8 @@ import { motion, useScroll, useTransform } from "motion/react";
 import type { BlogPost } from "../../content/types";
 import { categoryTitleOf } from "../../content/data/blog";
 import { formatJalaliDate, estimateReadingMinutes, toPersianDigits } from "../../lib/format";
-import { Section, Eyebrow } from "../ui/Section";
+import { Section } from "../ui/Section";
+import { SectionIntro } from "../ui/SectionIntro";
 import { ButtonLink } from "../ui/Button";
 import { TiltCard } from "../ui/TiltCard";
 import { ArrowLeft, Clock } from "lucide-react";
@@ -19,16 +20,12 @@ export function LatestPosts({ posts }: { posts: BlogPost[] }) {
   return (
     <Section id="blog">
       <div className="mb-14 flex flex-col gap-6 sm:mb-16 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex max-w-xl flex-col items-start gap-4">
-          <Eyebrow>از تحریریه</Eyebrow>
-          <h2 className="text-3xl font-bold leading-tight text-text sm:text-4xl lg:text-5xl">
-            آخرین نوشته‌های{" "}
-            <span className="text-gradient">بلاگ پاراگ</span>
-          </h2>
-          <p className="text-base leading-8 text-text-muted">
-            ایده‌ها، استراتژی‌ها و درس‌هایی از پروژه‌های واقعی رشد دیجیتال.
-          </p>
-        </div>
+        <SectionIntro
+          align="start"
+          title="آخرین نوشته‌های"
+          accent="بلاگ پاراگ"
+          body="ایده‌ها، استراتژی‌ها و درس‌هایی از پروژه‌های واقعی رشد دیجیتال."
+        />
         <ButtonLink href="/blog" variant="secondary" className="shrink-0 self-start sm:self-auto">
           همه مقالات
           <ArrowLeft className="h-4 w-4" />

@@ -92,6 +92,22 @@ body {
     text-decoration: none;
     color: inherit;
   }
+
+  /* No browser/default outline on any text field */
+  input,
+  textarea,
+  select {
+    outline: none;
+  }
+  input:focus,
+  input:focus-visible,
+  textarea:focus,
+  textarea:focus-visible,
+  select:focus,
+  select:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
 }
 
 
@@ -119,7 +135,9 @@ body {
 /* ---------- Page transition (driven by onPageTransitionStart/End) ---------- */
 #page-content {
   opacity: 1;
-  transform: translateY(0);
+  /* Resting transform MUST be `none`: any other value turns #page-content into
+     the containing block for every fixed-position descendant. */
+  transform: none;
   transition: opacity 0.32s ease, transform 0.32s ease;
 }
 body.page-transition #page-content {
@@ -241,6 +259,59 @@ body.page-transition #page-content {
   background-clip: text;
   color: transparent;
   animation: shimmer 6s linear infinite;
+}
+
+/* ---------- Nav active: light orbiting the pill border ---------- */
+@property --nav-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes nav-orbit {
+  to {
+    --nav-angle: 360deg;
+  }
+}
+/* Ring drawn only on a thin border via mask compositing; a bright accent spot
+   (plus a soft trail) orbits the pill.
+   Declaration order matters: the standard `mask` shorthand (with the composite
+   keyword inline) comes LAST — in Chromium `mask` aliases `-webkit-mask`, so a
+   later shorthand would otherwise reset the composite back to `add`. */
+.nav-active-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  padding: 1.5px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--nav-angle),
+    transparent 0deg,
+    color-mix(in srgb, var(--accent) 45%, transparent) 35deg,
+    var(--accent-hover) 70deg,
+    color-mix(in srgb, var(--accent) 45%, transparent) 105deg,
+    transparent 140deg,
+    transparent 360deg
+  );
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 70%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: nav-orbit 3.2s linear infinite;
+}
+/* Faint resting ring underneath so the pill reads even between passes */
+.nav-active-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-active-ring {
+    animation: none;
+    background: none;
+    filter: none;
+  }
 }
 
 /* 3D building blocks (used alongside Tailwind transform utilities) */

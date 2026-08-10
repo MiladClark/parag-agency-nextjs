@@ -2,6 +2,17 @@ import type { PortfolioItem } from "../types";
 
 export const portfolio: PortfolioItem[] = [
   {
+    slug: "pulse-fitness",
+    title: "نبض؛ اپلیکیشن هوشمند تناسب اندام",
+    category: "طراحی و توسعه اپلیکیشن",
+    client: "استارتاپ نبض",
+    cover: "from-emerald-500/40 to-green-900/40",
+    coverImage: "/portfolio/pulse/hero.png",
+    summary:
+      "طراحی و توسعه کامل اپلیکیشن موبایل تناسب اندام با داشبورد شخصی، برنامه تمرین، آنالیتیکس پیشرفت و پروفایل دستاوردها.",
+    tags: ["اپلیکیشن موبایل", "UI/UX", "React Native", "پروداکت"],
+  },
+  {
     slug: "rastin-store-seo",
     title: "رشد ۳ برابری ترافیک ارگانیک فروشگاه راستین",
     category: "سئو و تولید محتوا",

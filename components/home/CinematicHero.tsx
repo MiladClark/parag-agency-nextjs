@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import type { PageHero } from "../../content/types";
-import { Container, Eyebrow } from "../ui/Section";
+import { Container, SectionLabel } from "../ui/Section";
 import { ButtonLink } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { NeonInfinity } from "./NeonInfinity";
@@ -48,7 +48,7 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
           >
             {hero.eyebrow && (
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-                <Eyebrow>{hero.eyebrow}</Eyebrow>
+                <SectionLabel align="start">{hero.eyebrow}</SectionLabel>
               </motion.div>
             )}
 
@@ -56,7 +56,7 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
               variants={headlineContainer}
               initial="hidden"
               animate="show"
-              className="mt-5 text-3xl font-extrabold leading-[1.2] text-text sm:mt-7 sm:text-5xl sm:leading-[1.15] lg:text-7xl lg:leading-[1.12]"
+              className="mt-5 text-3xl font-black leading-[1.2] tracking-tight text-text sm:mt-7 sm:text-5xl sm:leading-[1.15] lg:text-7xl lg:leading-[1.12]"
             >
               {words.map((word, i) => (
                 <motion.span
