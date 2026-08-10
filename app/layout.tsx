@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppShell } from "@/components/layout/AppShell";
-import { themeInitScript } from "@/lib/theme";
+import { CmsSiteIntegrations } from "@/components/seo/CmsSiteIntegrations";
+import { buildVerification } from "@/lib/seo";
 import { getSiteSettings } from "@/lib/siteSettings";
+import { themeInitScript } from "@/lib/theme";
 
-// Async so the indexing switch in the CMS («وب‌سایت‌ها → سئو و تحلیل») can put a
-// noindex tag on every page of this site. Page-level metadata merges on top of
-// this, and `robots` is inherited unless a page overrides it.
+// Root metadata inherits CMS indexing, keywords and ownership verification.
+// Page-level metadata merges on top via generateMetadata / buildMetadata.
 export async function generateMetadata(): Promise<Metadata> {
-  const { indexing } = await getSiteSettings();
+  const settings = await getSiteSettings();
+  const keywords = settings.seo.primaryKeyword
+    ? [settings.seo.primaryKeyword]
+    : undefined;
 
   return {
     title: {
@@ -16,7 +20,9 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s | پاراگ",
     },
     description: "آژانس دیجیتال مارکتینگ پاراگ",
-    ...(indexing.noindex
+    keywords,
+    verification: buildVerification(settings),
+    ...(settings.indexing.noindex
       ? {
           robots: {
             index: false,
@@ -24,11 +30,15 @@ export async function generateMetadata(): Promise<Metadata> {
             googleBot: { index: false, follow: false },
           },
         }
-      : {}),
+      : {
+          robots: { index: true, follow: true },
+        }),
   };
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSiteSettings();
+
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
@@ -37,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-screen antialiased">
+        <CmsSiteIntegrations settings={settings} />
         <AppShell>{children}</AppShell>
       </body>
     </html>

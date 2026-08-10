@@ -266,6 +266,8 @@ function mapPost(doc: PayloadPost): BlogPost {
       description: doc.seo?.description || doc.excerpt,
       canonical: doc.seo?.canonical || undefined,
       ogType: "article",
+      // Post tags feed meta keywords (merged with site primaryKeyword in buildMetadata).
+      keywords: (doc.tags ?? []).map((t) => t.tag).filter(Boolean),
     },
     featured: doc.featured ?? false,
     tenant: CURRENT_TENANT,

@@ -24,14 +24,8 @@ export function JourneySteps() {
       <div className="grid gap-12 lg:grid-cols-2">
         {/* Steps with timeline rail (right in RTL) */}
         <div className="relative flex flex-col">
-          {/* rail */}
-          <div className="absolute bottom-[30vh] right-[1.15rem] top-[30vh] w-px bg-border" aria-hidden>
-            <motion.div
-              className="absolute inset-x-0 top-0 bg-accent"
-              animate={{ height: `${(active / (journeySteps.length - 1)) * 100}%` }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            />
-          </div>
+          {/* Static track — scroll line draws through the nodes */}
+          <div className="absolute bottom-[30vh] right-[1.15rem] top-[30vh] w-px bg-border/60" aria-hidden />
 
           {journeySteps.map((step, i) => (
             <motion.div
