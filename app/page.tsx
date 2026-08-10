@@ -10,7 +10,9 @@ import { JourneySteps } from "@/components/home/JourneySteps";
 import { ServicesList } from "@/components/home/ServicesList";
 import { StatsBand } from "@/components/home/StatsBand";
 import { PortfolioParallax } from "@/components/home/PortfolioParallax";
+import { LatestPosts } from "@/components/home/LatestPosts";
 import { FinalCta } from "@/components/home/FinalCta";
+import { fileRepository } from "@/content/fileRepository";
 
 export async function generateMetadata(): Promise<Metadata> {
   const repo = getContentRepository();
@@ -20,11 +22,19 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const repo = getContentRepository();
-  const [page, services, portfolio] = await Promise.all([
+  const [page, services, portfolio, blog] = await Promise.all([
     repo.getPage("home"),
     repo.listServices(),
     repo.listPortfolio(),
+    repo.listPosts({ page: 1, perPage: 4 }),
   ]);
+
+  // Until the CMS has posts for this tenant, keep the homepage section populated
+  // from the bundled file content so the layout never collapses to empty.
+  const latestPosts =
+    blog.posts.length > 0
+      ? blog.posts
+      : (await fileRepository.listPosts({ page: 1, perPage: 4 })).posts;
 
   return (
     <>
@@ -44,6 +54,7 @@ export default async function Page() {
         <ServicesList services={services} />
         <StatsBand />
         <PortfolioParallax portfolio={portfolio} />
+        <LatestPosts posts={latestPosts} />
         <FinalCta />
       </div>
     </>

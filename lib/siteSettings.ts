@@ -3,7 +3,7 @@ import { CURRENT_TENANT } from "@/content/tenant";
 // Per-site settings owned by the shared Payload panel (websites → «سئو و تحلیل»).
 // Server-side only: the values decide what goes in <head> and in robots.txt, so
 // they must be resolved before the response is rendered.
-const PAYLOAD_URL = process.env.PAYLOAD_URL || "http://localhost:3004";
+const PAYLOAD_URL = process.env.PAYLOAD_URL || "http://localhost:3601";
 
 // How long a change in the panel can take to appear on the site. Short enough
 // that flipping the indexing switch feels immediate, long enough that the CMS

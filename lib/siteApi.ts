@@ -2,7 +2,7 @@ import { CURRENT_TENANT } from "../content/tenant";
 
 // Client → Payload public site API (contact, and later auth/chat). Every call
 // carries this site's tenant so the shared CMS scopes it correctly.
-const PAYLOAD = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3004";
+const PAYLOAD = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3601";
 
 export async function submitContact(input: {
   name: string;

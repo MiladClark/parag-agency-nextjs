@@ -14,7 +14,7 @@ import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const cmsOrigin = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3004";
+const cmsOrigin = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3601";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },

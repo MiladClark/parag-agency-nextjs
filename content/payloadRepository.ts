@@ -16,7 +16,7 @@ import { CURRENT_TENANT } from "./tenant";
 // (pages/services/portfolio) stays on the existing file/db sources; blog reads
 // hit the shared Payload CMS REST API and fall back to file data on failure so
 // the site never breaks when the CMS is down.
-const PAYLOAD_URL = process.env.PAYLOAD_URL || "http://localhost:3004";
+const PAYLOAD_URL = process.env.PAYLOAD_URL || "http://localhost:3601";
 const DEFAULT_PER_PAGE = 9;
 
 /**

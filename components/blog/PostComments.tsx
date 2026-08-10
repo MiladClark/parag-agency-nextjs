@@ -17,7 +17,7 @@ import { CaptchaBox, type CaptchaHandle, type CaptchaProvider } from "./CaptchaB
 // reply list stays readable on a phone. A reply to a reply is attached to the
 // same thread rather than nesting further.
 
-const PAYLOAD = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3004";
+const PAYLOAD = process.env.NEXT_PUBLIC_PAYLOAD_URL || "http://localhost:3601";
 
 type ApiComment = {
   id: number;
