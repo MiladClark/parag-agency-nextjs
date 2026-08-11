@@ -12,6 +12,7 @@
     "start": "bash start-aapanel.sh",
     "start:next": "next start -p 3602 -H 0.0.0.0",
     "start:standalone": "node .next/standalone/server.js",
+    "deploy": "bash scripts/deploy.sh",
     "lint": "eslint"
   },
   "dependencies": {
