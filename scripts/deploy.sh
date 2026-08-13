@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Production deploy: pull → install → build → standalone assets → restart.
+# Production deploy: pull → install → build → standalone assets.
 # Run on the server after pushing to GitHub:
 #   bash scripts/deploy.sh
+# Then Restart the Node project in aaPanel (default: no auto-start).
 # Optional:
 #   BRANCH=master bash scripts/deploy.sh
-#   SKIP_RESTART=1 bash scripts/deploy.sh   # build only; restart Node app in aaPanel manually
+#   SKIP_RESTART=0 bash scripts/deploy.sh   # also start via nohup (not recommended with aaPanel)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -12,7 +13,8 @@ cd "$ROOT"
 
 BRANCH="${BRANCH:-master}"
 REMOTE="${REMOTE:-origin}"
-SKIP_RESTART="${SKIP_RESTART:-0}"
+# Keep process control in aaPanel unless explicitly overridden.
+SKIP_RESTART="${SKIP_RESTART:-1}"
 
 log() { echo "[deploy] $*"; }
 die() { echo "[deploy] ERROR: $*" >&2; exit 1; }
@@ -37,8 +39,10 @@ if [ "$NODE_MAJOR" -lt 20 ]; then
   die "Node >= 20.9 required (found $(node -v))"
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
-  die "Working tree is dirty. Commit/stash server-local changes, or reset, then re-run."
+# Ignore untracked server-only paths (.well-known, local uploads, etc.).
+# Tracked local edits are reset to match remote so deploy always wins.
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  log "Tracked local changes detected; resetting to match ${REMOTE}/${BRANCH}..."
 fi
 
 log "Fetching ${REMOTE}/${BRANCH}..."
@@ -48,9 +52,12 @@ LOCAL="$(git rev-parse HEAD)"
 REMOTE_SHA="$(git rev-parse "${REMOTE}/${BRANCH}")"
 if [ "$LOCAL" = "$REMOTE_SHA" ]; then
   log "Already up to date (${LOCAL:0:7}). Rebuilding anyway..."
+  git reset --hard "$REMOTE_SHA"
+  git clean -fd -e .well-known -e .env -e .env.local
 else
   log "Updating ${LOCAL:0:7} → ${REMOTE_SHA:0:7}..."
-  git pull --ff-only "$REMOTE" "$BRANCH"
+  git reset --hard "$REMOTE_SHA"
+  git clean -fd -e .well-known -e .env -e .env.local
 fi
 
 log "Installing dependencies..."
@@ -108,18 +115,13 @@ free_port() {
 }
 
 if [ "$SKIP_RESTART" = "1" ]; then
-  log "SKIP_RESTART=1 — restart the Node project in aaPanel (or run: npm start)."
+  log "Build complete. Restart «parag_agency» in aaPanel to apply the new build."
   log "Done."
   exit 0
 fi
 
-log "Restarting app on port ${PORT}..."
-# Free the port so aaPanel / the new process can bind.
-# start-aapanel.sh also frees the port and execs the standalone server.
+log "Restarting app on port ${PORT} (SKIP_RESTART=0)..."
 free_port "$PORT"
-
-# Keep the site up after SSH deploy. If aaPanel shows "stopped", click Restart once
-# so the panel tracks the process again (or use SKIP_RESTART=1 and restart only in aaPanel).
 nohup bash "$ROOT/start-aapanel.sh" >> /tmp/parag-agency.log 2>&1 &
 APP_PID=$!
 sleep 2
@@ -134,4 +136,4 @@ else
   log "Process started (pid ${APP_PID}). Log: /tmp/parag-agency.log"
 fi
 
-log "Deploy complete."
+log "Deploy complete. If aaPanel shows Stopped, click Restart once so the panel tracks the process."
