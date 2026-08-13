@@ -10,8 +10,10 @@ import { SectionIntro } from "../ui/SectionIntro";
 import { ButtonLink } from "../ui/Button";
 import { TiltCard } from "../ui/TiltCard";
 import { ArrowLeft, Clock } from "lucide-react";
+import { useLiteMotion } from "../../lib/useMediaQuery";
 
 export function LatestPosts({ posts }: { posts: BlogPost[] }) {
+  const lite = useLiteMotion();
   if (!posts.length) return null;
 
   const featured = posts.find((p) => p.featured) ?? posts[0];
@@ -47,8 +49,11 @@ export function LatestPosts({ posts }: { posts: BlogPost[] }) {
           {rest.map((post, i) => (
             <motion.div
               key={post.slug}
-              initial={{ opacity: 0, x: 28 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              // The 28px entry offset overhangs the container gutter, which a
+              // phone can surface as a horizontal scroll before the card has
+              // revealed. Mobile fades in place instead.
+              initial={lite ? { opacity: 0 } : { opacity: 0, x: 28 }}
+              whileInView={lite ? { opacity: 1 } : { opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-10% 0px" }}
               transition={{
                 duration: 0.65,
@@ -67,6 +72,7 @@ export function LatestPosts({ posts }: { posts: BlogPost[] }) {
 
 function FeaturedInsight({ post }: { post: BlogPost }) {
   const ref = useRef<HTMLAnchorElement | null>(null);
+  const lite = useLiteMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
@@ -81,12 +87,15 @@ function FeaturedInsight({ post }: { post: BlogPost }) {
         href={`/blog/${post.slug}`}
         className="group relative flex h-full min-h-[28rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-panel shadow-depth"
       >
+        {/* Explicit top radius — the card's own `overflow: hidden` is not a
+            reliable clip on iOS once a 3D context or a backdrop-filter is in
+            play, and the cover then squares off the card's top corners. */}
         <div
-          className={`relative h-64 overflow-hidden sm:h-80 ${
+          className={`relative h-56 overflow-hidden rounded-t-[2rem] sm:h-80 ${
             post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-surface"
           }`}
         >
-          <motion.div style={{ y: mediaY }} className="absolute inset-[-12%]">
+          <motion.div style={lite ? undefined : { y: mediaY }} className="absolute inset-[-12%]">
             {post.coverImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

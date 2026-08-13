@@ -41,8 +41,8 @@ export const pages: Record<string, PageContent> = {
       title: "برند شما، آمادهٔ دیده‌ شدن",
       subtitle:
         "ما داستان کسب‌وکار شما را به زبان دیجیتال روایت می‌کنیم؛ از استراتژی و سئو تا تبلیغات و برندینگ، همه در یک مسیر منسجم برای رشد.",
-      cta: { label: "شروع همکاری", href: "/contact" },
-      secondaryCta: { label: "مشاهده خدمات", href: "/services" },
+      cta: { label: "همکاری با ما", href: "/contact" },
+      secondaryCta: { label: "خدمات ما", href: "/services" },
     },
     sections: [
       {

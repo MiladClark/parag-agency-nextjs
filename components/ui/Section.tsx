@@ -14,8 +14,12 @@ export function Section({
   children,
   ...rest
 }: React.ComponentProps<"section">) {
+  // py-20 top and bottom stacks to a 160px trough between adjacent sections,
+  // which on a stacked layout reads as the page having ended. Phones and
+  // tablets get a tighter rhythm; the desktop layout keeps the generous
+  // editorial spacing it was designed around.
   return (
-    <section id={id} className={`py-20 sm:py-28 ${className}`} {...rest}>
+    <section id={id} className={`py-14 lg:py-28 ${className}`} {...rest}>
       <Container>{children}</Container>
     </section>
   );
@@ -40,8 +44,14 @@ export function SectionLabel({
         className,
       ].join(" ")}
     >
+      {/* The leading rule anchors a start-aligned label against a wide column.
+          On a phone the label is close to full width already, so the rule just
+          dangles off the edge of the text — hidden below `sm`. */}
       {align === "start" ? (
-        <span className="h-px w-8 bg-linear-to-l from-accent to-transparent" aria-hidden />
+        <span
+          className="hidden h-px w-8 bg-linear-to-l from-accent to-transparent sm:block"
+          aria-hidden
+        />
       ) : (
         <span className="h-px w-8 bg-linear-to-l from-transparent to-accent/80" aria-hidden />
       )}

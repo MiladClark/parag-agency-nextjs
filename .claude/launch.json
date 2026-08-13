@@ -5,7 +5,7 @@
       "name": "frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3005
+      "port": 3602
     },
     {
       "name": "cms",

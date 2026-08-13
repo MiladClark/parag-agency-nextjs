@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useSpring, useTransform } from "motion/react";
+import { useLiteMotion } from "../../lib/useMediaQuery";
 
 // One continuous centre-weave thread (original geometry). Draw length is tied to
 // the viewport vertical centre so the line grows *with* the reader:
@@ -120,6 +121,11 @@ export function ScrollJourneyLine() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<Metrics | null>(null);
   const [box, setBox] = useState<{ w: number; h: number; d: string } | null>(null);
+  // The line is `hidden sm:block`, but display:none only stops it painting —
+  // the path measurement (getTotalLength plus a 28-step binary search per
+  // node), the ResizeObserver and the scroll spring all still ran on phones for
+  // something no one could see.
+  const lite = useLiteMotion();
 
   const { scrollY } = useScroll();
   const smoothY = useSpring(scrollY, { stiffness: 90, damping: 30, mass: 0.4 });
@@ -155,6 +161,7 @@ export function ScrollJourneyLine() {
   });
 
   useEffect(() => {
+    if (lite) return;
     const wrap = wrapRef.current;
     const parent = wrap?.parentElement;
     if (!wrap || !parent) return;
@@ -206,7 +213,7 @@ export function ScrollJourneyLine() {
       window.removeEventListener("resize", build);
       clearTimeout(t);
     };
-  }, []);
+  }, [lite]);
 
   return (
     <div
@@ -215,7 +222,7 @@ export function ScrollJourneyLine() {
       style={{ zIndex: -1 }}
       aria-hidden
     >
-      {box && (
+      {box && !lite && (
         <svg className="h-full w-full" viewBox={`0 0 ${box.w} ${box.h}`} fill="none">
           <motion.path
             d={box.d}

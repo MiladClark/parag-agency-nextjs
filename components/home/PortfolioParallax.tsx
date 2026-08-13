@@ -8,6 +8,7 @@ import { SectionIntro } from "../ui/SectionIntro";
 import { ButtonLink } from "../ui/Button";
 import { TiltCard } from "../ui/TiltCard";
 import { PortfolioCard } from "../cards/PortfolioCard";
+import { useLiteMotion } from "../../lib/useMediaQuery";
 
 export function PortfolioParallax({ portfolio }: { portfolio: PortfolioItem[] }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -56,9 +57,13 @@ function ParallaxCard({
   depth: number;
   children: React.ReactNode;
 }) {
+  const lite = useLiteMotion();
   const y = useTransform(progress, [0, 1], [depth, -depth]);
+  // The offsets stagger a three-column grid. Mobile stacks to one column, where
+  // the same offsets just push cards out of rhythm with the section's own
+  // spacing — uneven gaps for a parallax that reads as a bug.
   return (
-    <motion.div style={{ y }} className="h-full lg:will-change-transform">
+    <motion.div style={lite ? undefined : { y }} className="h-full lg:will-change-transform">
       {children}
     </motion.div>
   );

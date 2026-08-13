@@ -72,13 +72,18 @@ export function ServicesList({ services }: { services: Service[] }) {
                   >
                     {service.title}
                   </h3>
-                  {/* expand-on-hover description */}
+                  {/* Expand-on-hover description. A touch device never fires
+                      hover, so gating it on `active` alone hid every service
+                      excerpt on phones *and* tablets — the list read as bare
+                      titles. Below `lg` it is always open; the hover
+                      choreography is desktop polish on top of content that is
+                      there either way. */}
                   <div
-                    className={`grid transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                    className={`grid transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] max-lg:grid-rows-[1fr] max-lg:pt-2 max-lg:opacity-100 ${
                       active ? "grid-rows-[1fr] pt-3 opacity-100" : "grid-rows-[0fr] opacity-0"
                     }`}
                   >
-                    <p className="overflow-hidden max-w-xl text-sm leading-7 text-text-muted">
+                    <p className="max-w-xl overflow-hidden text-sm leading-7 text-text-muted">
                       {service.excerpt}
                     </p>
                   </div>

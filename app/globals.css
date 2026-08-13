@@ -156,6 +156,10 @@ body.page-transition #page-content {
 .reveal.is-visible {
   opacity: 1;
   transform: none;
+  /* Release the compositor layer once the reveal has played. Leaving
+     `will-change` set pins a layer per element for the life of the page, and a
+     long page holds dozens of them — real memory pressure on a phone. */
+  will-change: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -228,12 +232,33 @@ body.page-transition #page-content {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 }
 
-/* Glassmorphism panel */
+/* Glassmorphism panel.
+
+   Declaration order matters, same trap as .nav-active-ring below: Lightning CSS
+   treats `-webkit-backdrop-filter` and `backdrop-filter` as one property and
+   keeps whichever comes last. With the standard property written first it was
+   being dropped from the build entirely, so these panels had no blur at all in
+   Chrome or Firefox — only Safari, which reads the prefixed form. Prefixed
+   first, standard last. */
 .glass {
   background: color-mix(in srgb, var(--panel) 72%, transparent);
-  backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
   border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  /* iOS samples the backdrop against the border *box* and can miss the radius,
+     leaving square corners on an otherwise rounded panel. Giving the element
+     its own stacking context makes the rounded clip authoritative. */
+  isolation: isolate;
+}
+
+/* Phones and tablets render the same panel at a fraction of the size, so the
+   full 18px sample radius buys nothing while still costing a backdrop pass per
+   frame. */
+@media (max-width: 1023px) {
+  .glass {
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    backdrop-filter: blur(10px) saturate(130%);
+  }
 }
 
 /* Layered depth shadow for floating 3D cards */
@@ -315,8 +340,21 @@ body.page-transition #page-content {
 }
 
 /* 3D building blocks (used alongside Tailwind transform utilities) */
-.preserve-3d {
-  transform-style: preserve-3d;
+
+/* `preserve-3d` establishes a 3D rendering context, and iOS Safari then declines
+   to apply an ancestor's `overflow: hidden` + `border-radius` clip to the
+   subtree — rounded cards come out with sharp corners on phones while desktop
+   looks correct. Every use of this class sits under a cursor-driven tilt, so
+   scoping it to the desktop layout costs nothing.
+
+   Both conditions are needed. Pointer type alone is not enough: a tablet with a
+   trackpad, or any browser in "request desktop site" mode, reports a fine
+   pointer while still running the stacked layout. Width alone is not enough
+   either, since a touch laptop would keep the tilt it cannot drive. */
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
 }
 .backface-hidden {
   backface-visibility: hidden;

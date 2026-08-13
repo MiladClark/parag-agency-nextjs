@@ -90,12 +90,12 @@ export function MobileMenu({
                   <a
                     href={item.href}
                     onClick={onClose}
-                    className={`group flex items-center justify-between border-b border-border/50 py-4 text-2xl font-black transition-colors ${
+                    className={`group flex items-center justify-between border-b border-border/50 py-3.5 text-lg font-bold transition-colors ${
                       isActive(item.href) ? "text-accent" : "text-text hover:text-accent"
                     }`}
                   >
                     {item.label}
-                    <ArrowLeft className="h-5 w-5 -translate-x-2 text-accent opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
+                    <ArrowLeft className="h-4 w-4 -translate-x-2 text-accent opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
                   </a>
                 </motion.li>
               ))}

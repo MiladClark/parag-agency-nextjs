@@ -25,15 +25,21 @@ export function JourneySteps() {
       <div className="grid gap-12 lg:grid-cols-2">
         {/* Steps with timeline rail (right in RTL) */}
         <div className="relative flex flex-col">
-          {/* Static track — scroll line draws through the nodes */}
-          <div className="absolute bottom-[30vh] right-[1.15rem] top-[30vh] w-px bg-border/60" aria-hidden />
+          {/* Static track — scroll line draws through the nodes. Inset must
+              match half a step's height so it starts and ends on a node. */}
+          <div
+            className="absolute bottom-[20vh] right-[1.15rem] top-[20vh] w-px bg-border/60 lg:bottom-[30vh] lg:top-[30vh]"
+            aria-hidden
+          />
 
           {journeySteps.map((step, i) => (
             <motion.div
               key={step.index}
               onViewportEnter={() => setActive(i)}
               viewport={{ margin: "-50% 0px -50% 0px" }}
-              className="relative flex min-h-[60vh] items-center gap-6 pr-12"
+              // 60vh a step is four near-empty screens once the layout stacks;
+              // 40vh keeps the one-step-at-a-time pacing without the dead space.
+              className="relative flex min-h-[40vh] items-center gap-4 pr-10 sm:gap-6 sm:pr-12 lg:min-h-[60vh]"
             >
               {/* node */}
               <span
@@ -50,16 +56,22 @@ export function JourneySteps() {
 
               <div className="flex flex-col gap-4">
                 <span className="text-sm font-bold text-accent">{step.index}</span>
+                {/* Inactive steps dim heavily so the active one leads the eye.
+                    That reads on the desktop layout, where the sticky 3D panel
+                    carries the section and several steps share the viewport. On
+                    a stacked layout the neighbours are mostly offscreen anyway
+                    and /30 body text is simply unreadable, so phones and
+                    tablets keep a legible floor. */}
                 <h3
-                  className={`text-2xl font-bold transition-colors duration-300 sm:text-3xl ${
-                    active === i ? "text-text" : "text-text-muted/40"
+                  className={`text-xl font-bold transition-colors duration-300 sm:text-2xl lg:text-3xl ${
+                    active === i ? "text-text" : "text-text-muted/70 lg:text-text-muted/40"
                   }`}
                 >
                   {step.title}
                 </h3>
                 <p
-                  className={`max-w-md text-base leading-8 transition-colors duration-300 ${
-                    active === i ? "text-text-muted" : "text-text-muted/30"
+                  className={`max-w-md text-sm leading-7 transition-colors duration-300 sm:text-base sm:leading-8 ${
+                    active === i ? "text-text-muted" : "text-text-muted/60 lg:text-text-muted/30"
                   }`}
                 >
                   {step.body}

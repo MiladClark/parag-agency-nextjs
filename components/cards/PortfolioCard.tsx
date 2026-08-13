@@ -11,7 +11,13 @@ export function PortfolioCard({ item, depth = false }: { item: PortfolioItem; de
         depth ? "preserve-3d shadow-depth" : ""
       }`}
     >
-      <div className={`relative aspect-[16/10] overflow-hidden bg-linear-to-br ${item.cover}`}>
+      {/* Own top radius rather than relying on the card's `overflow: hidden`:
+          any 3D rendering context above (tilt, `preserve-3d`) stops iOS from
+          applying the ancestor clip, and the cover then renders square-cornered
+          over a rounded card. An explicit radius here holds regardless. */}
+      <div
+        className={`relative aspect-[16/10] overflow-hidden rounded-t-[1.75rem] bg-linear-to-br ${item.cover}`}
+      >
         {item.coverImage ? (
           <Image
             src={item.coverImage}

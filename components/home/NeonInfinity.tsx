@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
+import { useLiteMotion } from "../../lib/useMediaQuery";
 
 const CX = 400;
 const CY = 200;
@@ -151,20 +152,46 @@ const PULSE_PATHS = [
   { d: LINES[2].d, phase: -GUIDE_LEN * 0.66, dur: 8.1 },
 ];
 
+/* ---------------------------------------------------------------------------
+   Lite variant (phones + prefers-reduced-motion).
+
+   The full figure animates 124 SVG nodes inside four filters. That alone is
+   heavy, but the real cost is that they used to sit under a <g> animating
+   `scale`: a transform on a filtered subtree forces the whole filter chain to
+   re-rasterise every frame, which no phone GPU keeps up with. Lite mode drops
+   that wrapper animation entirely and thins the node count.
+
+   Subsets are sampled at an even stride rather than sliced off the front, so
+   the strands stay evenly distributed around the lemniscate and the silhouette
+   reads the same. The three LINES always render — they're static, cheap, and
+   they're what actually carries the infinity shape.
+--------------------------------------------------------------------------- */
+const everyNth = <T,>(arr: T[], count: number): T[] =>
+  Array.from({ length: count }, (_, i) => arr[Math.round((i * arr.length) / count)]).filter(Boolean);
+
+const STRANDS_LITE = everyNth(STRANDS, 8);
+const PARTICLES_LITE = everyNth(PARTICLES, 12);
+const PULSE_PATHS_LITE = PULSE_PATHS.slice(0, 1);
+
 export function NeonInfinity() {
   const theme = useThemeId();
+  const lite = useLiteMotion();
   const C = PALETTES[theme];
   const haloAlpha = theme === "light" ? 0.12 : 0.14;
+
+  const strands = lite ? STRANDS_LITE : STRANDS;
+  const particles = lite ? PARTICLES_LITE : PARTICLES;
+  const pulses = lite ? PULSE_PATHS_LITE : PULSE_PATHS;
 
   return (
     <div className="relative flex w-full items-center justify-center">
       <div
-        className="pointer-events-none absolute h-68 w-86 rounded-full blur-[100px]"
+        className="pointer-events-none absolute h-68 w-86 rounded-full blur-[70px] sm:blur-[100px]"
         style={{ background: `rgba(12,175,32,${haloAlpha + 0.04})` }}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute bottom-14 h-16 w-70 rounded-[100%] blur-2xl"
+        className="pointer-events-none absolute bottom-14 h-16 w-70 rounded-[100%] blur-xl sm:blur-2xl"
         style={{ background: `rgba(12,175,32,${haloAlpha})` }}
         aria-hidden
       />
@@ -193,29 +220,44 @@ export function NeonInfinity() {
           <filter id="particleGlow" x="-200%" y="-200%" width="500%" height="500%">
             <feGaussianBlur stdDeviation="1.4" />
           </filter>
-          <filter id="cometGlow" x="-150%" y="-150%" width="390%" height="390%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4.4" result="shadowOuter" />
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.1" result="shadowMid" />
-            <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="coreSoft" />
-            <feMerge>
-              <feMergeNode in="shadowOuter" />
-              <feMergeNode in="shadowMid" />
-              <feMergeNode in="coreSoft" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          {/* Three stacked blurs give the comet its layered falloff on desktop.
+              On lite that's three full-surface convolutions per frame for an
+              effect nobody can resolve on a 6" screen — one blur suffices. */}
+          {lite ? (
+            <filter id="cometGlow" x="-150%" y="-150%" width="390%" height="390%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          ) : (
+            <filter id="cometGlow" x="-150%" y="-150%" width="390%" height="390%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4.4" result="shadowOuter" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2.1" result="shadowMid" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="coreSoft" />
+              <feMerge>
+                <feMergeNode in="shadowOuter" />
+                <feMergeNode in="shadowMid" />
+                <feMergeNode in="coreSoft" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          )}
         </defs>
 
         <g transform={`rotate(${ROTATE} ${CX} ${CY})`}>
           <path d={HALO} fill="none" stroke={C.halo} strokeWidth="18" opacity="0.22" filter="url(#neonGlowSoft)" />
 
+          {/* The 1.2% "breathing" scale is imperceptible but re-rasterises every
+              filtered child beneath it once per frame. Static on lite. */}
           <motion.g
-            animate={{ scale: [1, 1.012, 1] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            animate={lite ? undefined : { scale: [1, 1.012, 1] }}
+            transition={lite ? undefined : { duration: 8, repeat: Infinity, ease: "easeInOut" }}
             style={{ transformOrigin: "400px 200px" }}
           >
             <g filter="url(#neonGlow)">
-              {STRANDS.map((s, i) => (
+              {strands.map((s, i) => (
                 <motion.path
                   key={i}
                   d={s.d}
@@ -233,7 +275,7 @@ export function NeonInfinity() {
             </g>
 
             <g filter="url(#particleGlow)">
-              {PARTICLES.map((p, i) => (
+              {particles.map((p, i) => (
                 <motion.circle
                   key={i}
                   cx={p.x}
@@ -265,7 +307,7 @@ export function NeonInfinity() {
             </g>
 
             <g filter="url(#cometGlow)">
-              {PULSE_PATHS.map((pulse, pulseIndex) =>
+              {pulses.map((pulse, pulseIndex) =>
                 PATH_FLARE.map((f, i) => (
                   <motion.path
                     key={`${pulseIndex}-${i}`}

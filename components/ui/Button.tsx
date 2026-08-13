@@ -43,3 +43,35 @@ export function ButtonLink({
 }: Common & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <a className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...rest} />;
 }
+
+/**
+ * A primary/secondary pair fused into one capsule — a single pill split in
+ * half, rather than two separate pills that wrap and stack on narrow screens.
+ *
+ * Children are expected to be two ButtonLink/Button elements. Give the second
+ * one `variant="ghost"` so the shell provides the border and fill and the pair
+ * reads as one control instead of two competing ones.
+ */
+export function ButtonGroup({
+  className = "",
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`inline-flex w-full items-stretch gap-1 rounded-full border border-border/80 bg-panel/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_30px_-18px_rgba(0,0,0,0.7)] backdrop-blur-sm sm:w-auto ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Sizing for a button living inside a ButtonGroup: equal halves, single line.
+ * `min-w-0` is load-bearing — a flex item defaults to `min-width: auto`, so
+ * without it a nowrap label refuses to shrink and overflows the capsule instead
+ * of sharing it.
+ */
+export const groupItem = "flex-1 min-w-0 whitespace-nowrap max-sm:px-2 max-sm:text-sm";

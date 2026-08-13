@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import type { PageHero } from "../../content/types";
 import { Container, SectionLabel } from "../ui/Section";
-import { ButtonLink } from "../ui/Button";
+import { ButtonGroup, ButtonLink, groupItem } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { NeonInfinity } from "./NeonInfinity";
 
@@ -21,9 +21,16 @@ const wordVariant = {
     transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
+// Animating `filter: blur()` runs a convolution per word per frame. Reduced
+// motion drops to a plain fade.
+const wordVariantReduced = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.4 } },
+};
 
 export function CinematicHero({ hero }: { hero: PageHero }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -33,6 +40,14 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
   const visualY = useTransform(scrollYProgress, [0, 1], [0, -40]);
 
   const words = hero.title.split(" ");
+  const rise = (delay: number) =>
+    reduce
+      ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.4, delay } }
+      : {
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.7, delay },
+        };
 
   return (
     <section
@@ -43,11 +58,11 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
         <div className="grid items-center gap-10 sm:gap-12 lg:grid-cols-[1fr_1.15fr] lg:gap-10">
           {/* Text column (right in RTL) */}
           <motion.div
-            style={{ y: contentY, opacity: contentOpacity }}
+            style={reduce ? undefined : { y: contentY, opacity: contentOpacity }}
             className="order-2 flex flex-col items-center text-center lg:order-1 lg:items-start lg:text-start"
           >
             {hero.eyebrow && (
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+              <motion.div {...rise(0)}>
                 <SectionLabel align="start">{hero.eyebrow}</SectionLabel>
               </motion.div>
             )}
@@ -61,7 +76,7 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
               {words.map((word, i) => (
                 <motion.span
                   key={`${word}-${i}`}
-                  variants={wordVariant}
+                  variants={reduce ? wordVariantReduced : wordVariant}
                   className={`inline-block ${i === words.length - 1 ? "text-gradient" : ""}`}
                 >
                   {word}
@@ -72,9 +87,7 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
 
             {hero.subtitle && (
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.55 }}
+                {...rise(0.55)}
                 className="mt-4 max-w-xl text-sm leading-7 text-text-muted sm:mt-7 sm:text-lg sm:leading-9"
               >
                 {hero.subtitle}
@@ -82,22 +95,27 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
             )}
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.75 }}
-              className="mt-10 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
+              {...rise(0.75)}
+              className="mt-8 flex w-full items-center justify-center sm:mt-10 lg:justify-start"
             >
-              {hero.cta && (
-                <ButtonLink href={hero.cta.href} size="lg">
-                  {hero.cta.label}
-                  <Icon name="arrow-left" />
-                </ButtonLink>
-              )}
-              {hero.secondaryCta && (
-                <ButtonLink href={hero.secondaryCta.href} variant="secondary" size="lg">
-                  {hero.secondaryCta.label}
-                </ButtonLink>
-              )}
+              <ButtonGroup>
+                {hero.cta && (
+                  <ButtonLink href={hero.cta.href} size="lg" className={groupItem}>
+                    {hero.cta.label}
+                    <Icon name="arrow-left" />
+                  </ButtonLink>
+                )}
+                {hero.secondaryCta && (
+                  <ButtonLink
+                    href={hero.secondaryCta.href}
+                    variant="ghost"
+                    size="lg"
+                    className={groupItem}
+                  >
+                    {hero.secondaryCta.label}
+                  </ButtonLink>
+                )}
+              </ButtonGroup>
             </motion.div>
 
             {/* social proof */}
@@ -105,7 +123,7 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.7, delay: 1 }}
-              className="mt-10 flex items-center gap-3"
+              className="mt-8 flex items-center gap-3 sm:mt-10"
             >
               <div className="flex -space-x-2 [direction:ltr]">
                 {["from-emerald-400 to-green-600", "from-teal-400 to-emerald-600", "from-lime-400 to-green-600", "from-green-400 to-teal-600"].map(
@@ -124,7 +142,10 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
           </motion.div>
 
           {/* Neon infinity (left in RTL) */}
-          <motion.div style={{ y: visualY }} className="relative order-1 lg:order-2">
+          <motion.div
+            style={reduce ? undefined : { y: visualY }}
+            className="relative order-1 lg:order-2"
+          >
             <NeonInfinity />
           </motion.div>
         </div>
@@ -132,14 +153,14 @@ export function CinematicHero({ hero }: { hero: PageHero }) {
 
       {/* scroll cue */}
       <motion.div
-        style={{ opacity: contentOpacity }}
-        className="absolute inset-x-0 bottom-8 flex flex-col items-center gap-2 text-text-muted"
+        style={reduce ? undefined : { opacity: contentOpacity }}
+        className="absolute inset-x-0 bottom-5 flex flex-col items-center gap-2 text-text-muted sm:bottom-8"
         aria-hidden
       >
         <span className="text-xs">برای روایت، اسکرول کنید</span>
         <motion.span
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          animate={reduce ? undefined : { y: [0, 8, 0] }}
+          transition={reduce ? undefined : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
           className="flex h-9 w-6 items-start justify-center rounded-full border border-border p-1.5"
         >
           <span className="h-1.5 w-1 rounded-full bg-accent" />
