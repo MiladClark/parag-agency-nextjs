@@ -60,11 +60,13 @@ else
   git clean -fd -e .well-known -e .env -e .env.local
 fi
 
-log "Installing dependencies..."
+log "Installing dependencies (including build tools)..."
+# .env sets NODE_ENV=production; without --include=dev, npm skips
+# @tailwindcss/postcss, typescript, etc. and `next build` fails.
 if [ -f package-lock.json ]; then
-  npm ci
+  npm ci --include=dev
 else
-  npm install
+  npm install --include=dev
 fi
 
 log "Building production (standalone)..."
