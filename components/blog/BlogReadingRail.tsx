@@ -14,6 +14,7 @@ import {
 import { Clock, List, PanelRightClose, Star, X } from "lucide-react";
 import type { BlogPost } from "../../content/types";
 import type { TocItem } from "../../lib/toc";
+import { useTocSpy } from "../../lib/tocSpy";
 import { toPersianDigits } from "../../lib/format";
 import { ShareButtons } from "./ShareButtons";
 import { RelatedMiniCards } from "./RelatedMiniCards";
@@ -56,8 +57,8 @@ export function BlogReadingRail({
   const [open, setOpen] = useState(true);
   const [hydrated, setHydrated] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeId, setActiveId] = useState<string | null>(toc[0]?.id ?? null);
   const [pct, setPct] = useState(0);
+  const { activeId, goTo } = useTocSpy(toc, !reduce);
 
   const { scrollYProgress } = useScroll({
     target: articleRef,
@@ -100,27 +101,6 @@ export function BlogReadingRail({
       /* private mode */
     }
   }, [open, hydrated]);
-
-  useEffect(() => {
-    if (!toc.length) return;
-    const nodes = toc
-      .map((item) => document.getElementById(item.id))
-      .filter((el): el is HTMLElement => Boolean(el));
-    if (!nodes.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]?.target?.id) setActiveId(visible[0].target.id);
-      },
-      { rootMargin: "-20% 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },
-    );
-
-    nodes.forEach((n) => observer.observe(n));
-    return () => observer.disconnect();
-  }, [toc]);
 
   // Close on Escape. Page scroll is NOT locked: the backdrop already blocks
   // interaction, and locking body overflow proved fragile (page stayed frozen).
@@ -209,8 +189,15 @@ export function BlogReadingRail({
                     />
                   )}
                   <a
-                    href={`#${item.id}`}
-                    onClick={() => setMobileOpen(false)}
+                    href={`#${encodeURIComponent(item.id)}`}
+                    aria-current={active ? "location" : undefined}
+                    onClick={(event) => {
+                      // Own the jump so the offset matches the sticky header and
+                      // the pill moves on the same tick as the click.
+                      event.preventDefault();
+                      goTo(item.id);
+                      setMobileOpen(false);
+                    }}
                     className={`relative block rounded-xl px-2.5 py-1.5 text-xs leading-5 transition-colors duration-300 ${
                       item.level === 3 ? "ps-5" : ""
                     } ${

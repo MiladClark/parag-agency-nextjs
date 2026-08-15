@@ -99,14 +99,14 @@ function Block({
       return block.level === 2 ? (
         <h2
           id={headingId}
-          className="relative mt-6 scroll-mt-28 ps-4 text-2xl font-bold leading-relaxed text-text before:absolute before:inset-y-1 before:start-0 before:w-1 before:rounded-full before:bg-accent sm:text-3xl"
+          className="relative mt-6 [scroll-margin-top:var(--anchor-offset,5rem)] ps-4 text-2xl font-bold leading-relaxed text-text before:absolute before:inset-y-1 before:start-0 before:w-1 before:rounded-full before:bg-accent sm:text-3xl"
         >
           <Inline nodes={block.rich} fallback={block.text} />
         </h2>
       ) : (
         <h3
           id={headingId}
-          className="mt-3 scroll-mt-28 text-xl font-bold leading-relaxed text-text sm:text-2xl"
+          className="mt-3 [scroll-margin-top:var(--anchor-offset,5rem)] text-xl font-bold leading-relaxed text-text sm:text-2xl"
         >
           <Inline nodes={block.rich} fallback={block.text} />
         </h3>

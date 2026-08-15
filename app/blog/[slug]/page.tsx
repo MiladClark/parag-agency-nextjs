@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import { getContentRepository } from "@/content/repository";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { decodeSlugParam } from "@/lib/slug";
 import { categoryTitleOf } from "@/content/data/blog";
 import { estimateReadingMinutes, toPersianDigits } from "@/lib/format";
@@ -31,7 +31,22 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const slug = decodeSlugParam(rawSlug);
   const post = await getContentRepository().getPost(slug);
   if (!post) return {};
-  return buildMetadata(post.coverImage ? { ...post.seo, ogImage: post.coverImage } : post.seo);
+
+  return buildMetadata(
+    {
+      ...post.seo,
+      canonical: post.seo.canonical ?? `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`,
+      ogType: "article",
+      ...(post.coverImage ? { ogImage: post.coverImage } : {}),
+    },
+    {
+      publishedTime: post.publishedAt,
+      modifiedTime: post.updatedAt ?? post.publishedAt,
+      authors: [post.author.name],
+      section: categoryTitleOf(post.category),
+      tags: post.tags,
+    },
+  );
 }
 
 export default async function Page({ params }: { params: Params }) {
@@ -45,7 +60,8 @@ export default async function Page({ params }: { params: Params }) {
   const minutes = post.readingMinutes ?? estimateReadingMinutes(post.body);
   const toc = extractToc(post.body);
   const rating = await fetchRatingSummary(post.slug);
-  const url = `https://parag.agency/blog/${post.slug}`;
+  const url = `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`;
+  const categoryTitle = categoryTitleOf(post.category);
 
   const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -55,9 +71,11 @@ export default async function Page({ params }: { params: Params }) {
     datePublished: post.publishedAt,
     dateModified: post.updatedAt ?? post.publishedAt,
     author: { "@type": "Person", name: post.author.name },
-    publisher: { "@type": "Organization", name: "پاراگ", url: "https://parag.agency" },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
     mainEntityOfPage: url,
     image: post.coverImage ? [post.coverImage] : undefined,
+    keywords: post.tags.length > 0 ? post.tags.join("، ") : undefined,
+    articleSection: categoryTitle,
   };
 
   if (rating && rating.count > 0) {
@@ -70,9 +88,29 @@ export default async function Page({ params }: { params: Params }) {
     };
   }
 
+  // Mirrors the visible breadcrumb, so the same trail shows in search results.
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "خانه", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "بلاگ", item: `${SITE_URL}/blog` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: categoryTitle,
+        item: `${SITE_URL}/blog/category/${encodeURIComponent(post.category)}`,
+      },
+      { "@type": "ListItem", position: 4, name: post.title, item: url },
+    ],
+  };
+
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([jsonLd, breadcrumb]) }}
+      />
 
       <section className="relative overflow-hidden">
         {/* Layered depth: two brand glows + a faint dotted texture. */}

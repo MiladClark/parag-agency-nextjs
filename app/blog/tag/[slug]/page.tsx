@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getContentRepository } from "@/content/repository";
-import { buildMetadata } from "@/lib/seo";
+import { archiveCanonical, buildMetadata } from "@/lib/seo";
 import { decodeSlugParam } from "@/lib/slug";
 import { Hero } from "@/components/sections/Hero";
 import { Section } from "@/components/ui/Section";
@@ -16,14 +16,22 @@ export async function generateStaticParams() {
   return tags.map((t) => ({ slug: encodeURIComponent(t.tag) }));
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: SearchParams;
+}): Promise<Metadata> {
   const { slug: rawSlug } = await params;
-  const slug = decodeSlugParam(rawSlug);
-  const tag = decodeURIComponent(slug);
+  const tag = decodeSlugParam(rawSlug);
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+
   return buildMetadata({
-    title: `#${tag} | بلاگ پاراگ`,
+    title: page > 1 ? `#${tag} — صفحهٔ ${page} | بلاگ پاراگ` : `#${tag} | بلاگ پاراگ`,
     description: `مقالات با برچسب «${tag}» در بلاگ پاراگ.`,
-    canonical: `https://parag.agency/blog/tag/${slug}`,
+    canonical: archiveCanonical(`/blog/tag/${encodeURIComponent(tag)}`, page),
   });
 }
 

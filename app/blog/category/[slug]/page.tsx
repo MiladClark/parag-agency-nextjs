@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContentRepository } from "@/content/repository";
-import { buildMetadata } from "@/lib/seo";
+import { archiveCanonical, buildMetadata } from "@/lib/seo";
 import { decodeSlugParam } from "@/lib/slug";
 import { Hero } from "@/components/sections/Hero";
 import { Section } from "@/components/ui/Section";
@@ -18,15 +18,25 @@ export async function generateStaticParams() {
   return categories.map((c) => ({ slug: c.slug }));
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams: SearchParams;
+}): Promise<Metadata> {
   const { slug: rawSlug } = await params;
   const slug = decodeSlugParam(rawSlug);
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
   const category = await getContentRepository().getCategory(slug);
   if (!category) return {};
+
   return buildMetadata({
-    title: `${category.title} | بلاگ پاراگ`,
+    title:
+      page > 1 ? `${category.title} — صفحهٔ ${page} | بلاگ پاراگ` : `${category.title} | بلاگ پاراگ`,
     description: category.description ?? `مقالات دستهٔ ${category.title} در بلاگ پاراگ.`,
-    canonical: `https://parag.agency/blog/category/${slug}`,
+    canonical: archiveCanonical(`/blog/category/${encodeURIComponent(slug)}`, page),
   });
 }
 

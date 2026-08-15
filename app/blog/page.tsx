@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getContentRepository } from "@/content/repository";
-import { buildMetadata } from "@/lib/seo";
+import { archiveCanonical, buildMetadata, NOINDEX, SITE_URL } from "@/lib/seo";
 import { Hero } from "@/components/sections/Hero";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/Reveal";
@@ -12,13 +12,25 @@ import { Pagination } from "@/components/blog/Pagination";
 
 type SearchParams = Promise<{ page?: string; q?: string }>;
 
-export async function generateMetadata(): Promise<Metadata> {
-  return buildMetadata({
-    title: "بلاگ پاراگ | مقالات دیجیتال مارکتینگ",
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  const { page: pageParam, q } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+
+  const meta = await buildMetadata({
+    title:
+      page > 1
+        ? `بلاگ پاراگ — صفحهٔ ${page} | مقالات دیجیتال مارکتینگ`
+        : "بلاگ پاراگ | مقالات دیجیتال مارکتینگ",
     description:
       "جدیدترین مقالات پاراگ در حوزهٔ سئو، تولید محتوا، تبلیغات دیجیتال، برندینگ و رشد کسب‌وکار.",
-    canonical: "https://parag.agency/blog",
+    canonical: q ? undefined : archiveCanonical("/blog", page),
   });
+
+  return q ? { ...meta, robots: NOINDEX } : meta;
 }
 
 export default async function Page({ searchParams }: { searchParams: SearchParams }) {
@@ -39,7 +51,7 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
     "@context": "https://schema.org",
     "@type": "Blog",
     name: "بلاگ پاراگ",
-    url: "https://parag.agency/blog",
+    url: `${SITE_URL}/blog`,
     description: "مقالات دیجیتال مارکتینگ آژانس پاراگ",
   };
 
