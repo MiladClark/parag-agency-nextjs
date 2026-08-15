@@ -28,9 +28,17 @@ type FormState = {
   authorName: string;
   authorWebsite: string;
   body: string;
+  /** Commenter asked to appear as «کاربر مهمان» publicly. */
+  anonymous: boolean;
 };
 
-const EMPTY_FORM: FormState = { authorEmail: "", authorName: "", authorWebsite: "", body: "" };
+const EMPTY_FORM: FormState = {
+  authorEmail: "",
+  authorName: "",
+  authorWebsite: "",
+  body: "",
+  anonymous: false,
+};
 
 const inputClass =
   "w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-text outline-none transition-colors placeholder:text-text-muted/60 focus:border-accent/60 focus:outline-none focus-visible:outline-none focus-visible:ring-0";
@@ -301,6 +309,7 @@ export function PostComments({
           authorEmail: form.authorEmail.trim(),
           authorWebsite: form.authorWebsite.trim() || undefined,
           body: form.body.trim(),
+          anonymous: form.anonymous,
           rating: !replyTo && formRating > 0 ? formRating : undefined,
           captchaToken,
         }),
@@ -461,6 +470,47 @@ export function PostComments({
               value={form.authorWebsite}
               onChange={(e) => setForm({ ...form, authorWebsite: e.target.value })}
             />
+          </label>
+
+          {/* Opt-in anonymity. Name and email are still required and still
+              stored — only the public rendering is masked, and that masking
+              happens server-side (endpoints/site.ts) so the real name never
+              reaches the browser. The track/knob read `form.anonymous` directly
+              instead of Tailwind's `peer-checked:` variants: the input is
+              already controlled, so one source of truth is enough. */}
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${
+              form.anonymous
+                ? "border-accent/50 bg-accent-soft/40"
+                : "border-border bg-surface/60 hover:border-accent/40"
+            }`}
+          >
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={form.anonymous}
+              onChange={(e) => setForm({ ...form, anonymous: e.target.checked })}
+            />
+            {/* RTL switch: the knob rests on the start (right) edge, slides left. */}
+            <span
+              aria-hidden
+              className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-300 ${
+                form.anonymous ? "bg-accent" : "bg-border"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-all duration-300 ${
+                  form.anonymous ? "right-[1.125rem]" : "right-0.5"
+                }`}
+              />
+            </span>
+            <span className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-text">دیدگاهم ناشناس منتشر شود</span>
+              <span className="text-xs leading-6 text-text-muted">
+                نام و وب‌سایت شما عمومی نمایش داده نمی‌شود و به‌جای آن «کاربر مهمان» می‌آید. نام و
+                ایمیل فقط نزد مدیر سایت باقی می‌ماند.
+              </span>
+            </span>
           </label>
 
           <label className="flex flex-col gap-1.5">
