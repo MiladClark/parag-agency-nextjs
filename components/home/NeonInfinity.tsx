@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useLiteMotion } from "../../lib/useMediaQuery";
 
 const CX = 400;
@@ -90,7 +89,19 @@ function useThemeId(): "dark" | "light" {
 
 const seeded = (n: number) => Math.abs(Math.sin(n * 43.7587)) % 1;
 
-// Geometry + colour ROLES (resolved per-theme at render time).
+/* ---------------------------------------------------------------------------
+   Geometry, colour ROLES and TIMING, all resolved once at module scope.
+
+   Timing rides out as `--nf-*` custom properties consumed by the keyframes in
+   globals.css. Nothing below re-renders: after the first paint React never
+   touches these nodes again and the browser samples every loop natively, where
+   the previous version recomputed and rewrote 124 attributes per frame from a
+   rAF callback on the main thread.
+--------------------------------------------------------------------------- */
+
+const timing = (dur: number, delay = 0) =>
+  ({ "--nf-dur": `${round(dur, 3)}s`, "--nf-delay": `${round(delay, 3)}s` }) as CSSProperties;
+
 const STRANDS = Array.from({ length: 26 }).map((_, i) => {
   const a = A + Math.sin(i * 1.7) * 26;
   const yScale = 0.8 + Math.cos(i * 0.9) * 0.2;
@@ -105,18 +116,28 @@ const STRANDS = Array.from({ length: 26 }).map((_, i) => {
     di: i % 2,
     opacity: isDark ? 0.5 : 0.4 + (i % 4) * 0.16,
     dash: `${2 + (i % 3) * 2} ${28 + (i % 6) * 16}`,
-    dur: 7 + (i % 7) * 1.5,
-    dir: i % 2 === 0 ? 1 : -1,
-    delay: (i % 5) * 0.4,
+    // Odd strands travelled to +320 rather than -320; that sign is the only
+    // thing separating the two strand keyframes.
+    reverse: i % 2 !== 0,
+    style: timing(7 + (i % 7) * 1.5, (i % 5) * 0.4),
   };
 });
 
 const PARTICLES = (() => {
-  const arr: { x: number; y: number; r: number; ci: number; dur: number; delay: number }[] = [];
+  const arr: { x: number; y: number; r: number; ci: number; style: CSSProperties }[] = [];
   const make = (t: number, seed: number) => {
     const { x, y } = point(t, A, 0.92);
     const r1 = seeded(seed);
-    arr.push({ x, y, r: round(0.8 + r1 * 1.9), ci: seed % 6, dur: 2 + r1 * 2.6, delay: seeded(seed * 1.7) * 2.5 });
+    arr.push({
+      x,
+      y,
+      r: round(0.8 + r1 * 1.9),
+      ci: seed % 6,
+      style: {
+        ...timing(2 + r1 * 2.6, seeded(seed * 1.7) * 2.5),
+        transformOrigin: `${x}px ${y}px`,
+      },
+    });
   };
   const N = 56;
   for (let i = 0; i < N; i++) make((i / N) * Math.PI * 2, i + 1);
@@ -136,7 +157,7 @@ const LINES = [
   { id: "infLine3", d: lemniscate(A + 10, 0.84), rotate: -2.5, ci: 2, width: 0.9, opacity: 0.55 },
 ];
 
-const ROTATE = -35;
+const ROTATE = -45;
 const GUIDE_LEN = pathLength(A, 0.92);
 
 const PATH_FLARE = [
@@ -152,39 +173,84 @@ const PULSE_PATHS = [
   { d: LINES[2].d, phase: -GUIDE_LEN * 0.66, dur: 8.1 },
 ];
 
+// One flat list of comet strokes: three pulses x four flare layers. Every layer
+// starts at its own dash offset and travels exactly GUIDE_LEN, so from/to ride
+// along as custom properties instead of forcing twelve keyframe blocks.
+const COMETS = PULSE_PATHS.flatMap((pulse, pi) =>
+  PATH_FLARE.map((f, fi) => {
+    const from = round(f.seg * 0.5 + pulse.phase, 2);
+    return {
+      key: `${pi}-${fi}`,
+      pulse: pi,
+      d: pulse.d,
+      ci: f.ci,
+      width: f.width,
+      opacity: f.opacity,
+      dash: `${f.seg} ${GUIDE_LEN}`,
+      style: {
+        "--nf-dur": `${pulse.dur}s`,
+        "--nf-from": `${from}`,
+        "--nf-to": `${round(from - GUIDE_LEN, 2)}`,
+      } as CSSProperties,
+    };
+  }),
+);
+
 /* ---------------------------------------------------------------------------
    Lite variant (phones + prefers-reduced-motion).
 
-   The full figure animates 124 SVG nodes inside four filters. That alone is
-   heavy, but the real cost is that they used to sit under a <g> animating
-   `scale`: a transform on a filtered subtree forces the whole filter chain to
-   re-rasterise every frame, which no phone GPU keeps up with. Lite mode drops
-   that wrapper animation entirely and thins the node count.
+   Desktop renders the full figure. Profiling the homepage put the complete
+   124-node version at 0.4ms per frame — the frame budget was going to the
+   ambient background's blurs, not to this — so there is nothing to gain by
+   thinning it on machines running the desktop layout.
 
-   Subsets are sampled at an even stride rather than sliced off the front, so
-   the strands stay evenly distributed around the lemniscate and the silhouette
-   reads the same. The three LINES always render — they're static, cheap, and
-   they're what actually carries the infinity shape.
+   Phones are a different story: same node count, a quarter of the screen, and a
+   GPU that has to draw it anyway. Subsets are sampled at an even stride rather
+   than sliced off the front, so the strands stay evenly distributed around the
+   lemniscate and the silhouette reads the same. The three LINES always render —
+   they're static, cheap, and they're what actually carries the infinity shape.
 --------------------------------------------------------------------------- */
 const everyNth = <T,>(arr: T[], count: number): T[] =>
   Array.from({ length: count }, (_, i) => arr[Math.round((i * arr.length) / count)]).filter(Boolean);
 
 const STRANDS_LITE = everyNth(STRANDS, 8);
 const PARTICLES_LITE = everyNth(PARTICLES, 12);
-const PULSE_PATHS_LITE = PULSE_PATHS.slice(0, 1);
+const COMETS_LITE = COMETS.filter((c) => c.pulse === 0);
+
+/**
+ * Off-screen the figure still keeps its filter regions in the compositing tree
+ * and goes on re-rasterising for the whole rest of the page. `rootMargin`
+ * restarts the loops slightly before the hero scrolls back in, so the resume is
+ * never visible.
+ */
+function useIdleWhenOffscreen<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => el.classList.toggle("neon-idle", !entry.isIntersecting),
+      { rootMargin: "200px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return ref;
+}
 
 export function NeonInfinity() {
   const theme = useThemeId();
   const lite = useLiteMotion();
+  const root = useIdleWhenOffscreen<HTMLDivElement>();
   const C = PALETTES[theme];
   const haloAlpha = theme === "light" ? 0.12 : 0.14;
 
   const strands = lite ? STRANDS_LITE : STRANDS;
   const particles = lite ? PARTICLES_LITE : PARTICLES;
-  const pulses = lite ? PULSE_PATHS_LITE : PULSE_PATHS;
+  const comets = lite ? COMETS_LITE : COMETS;
 
   return (
-    <div className="relative flex w-full items-center justify-center">
+    <div ref={root} className="relative flex w-full items-center justify-center">
       <div
         className="pointer-events-none absolute h-68 w-86 rounded-full blur-[70px] sm:blur-[100px]"
         style={{ background: `rgba(12,175,32,${haloAlpha + 0.04})` }}
@@ -196,70 +262,75 @@ export function NeonInfinity() {
         aria-hidden
       />
 
-      <motion.svg
-        viewBox="0 0 800 400"
-        className="w-full max-w-3xl overflow-visible lg:scale-110"
-        initial={{ opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-        aria-hidden
-      >
-        <defs>
-          <filter id="neonGlow" x="-25%" y="-25%" width="150%" height="150%">
-            <feGaussianBlur stdDeviation="2.2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="neonGlowSoft" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="10" />
-          </filter>
-
-          <filter id="particleGlow" x="-200%" y="-200%" width="500%" height="500%">
-            <feGaussianBlur stdDeviation="1.4" />
-          </filter>
-          {/* Three stacked blurs give the comet its layered falloff on desktop.
-              On lite that's three full-surface convolutions per frame for an
-              effect nobody can resolve on a 6" screen — one blur suffices. */}
-          {lite ? (
-            <filter id="cometGlow" x="-150%" y="-150%" width="390%" height="390%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="glow" />
+      {/* Entrance (one-shot) and breathing (infinite) both drive `transform`, so
+          they sit on separate elements instead of fighting over one. Tailwind's
+          `scale-110` uses the standalone `scale` property and composes with
+          both. */}
+      <div className="neon-enter w-full max-w-3xl lg:scale-110">
+        {/* Keep this class list a plain literal. Tailwind scans source text for
+            candidates, so building it with a template literal hid
+            `overflow-visible` behind `${`, the utility stopped being generated,
+            and the SVG fell back to the UA stylesheet's `svg { overflow:
+            hidden }` — which clipped the top and bottom off the figure. The
+            breathing is gated in CSS instead of here for the same reason. */}
+        <svg viewBox="0 0 800 400" className="w-full overflow-visible neon-breathe" aria-hidden>
+          <defs>
+            {/* Filter regions are sized to ~3 sigma of their own blur plus slack
+                rather than to the round percentages they started as. The region
+                is the surface convolved and composited every frame, so a
+                500%x500% box around a 1.4 blur was rasterising roughly 24x the
+                pixels the effect can physically reach. Group bounding boxes here
+                measure about 700x260 user units. */}
+            <filter id="neonGlow" x="-3%" y="-6%" width="106%" height="112%">
+              <feGaussianBlur stdDeviation="2.2" result="blur" />
               <feMerge>
-                <feMergeNode in="glow" />
+                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-          ) : (
-            <filter id="cometGlow" x="-150%" y="-150%" width="390%" height="390%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4.4" result="shadowOuter" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2.1" result="shadowMid" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="coreSoft" />
-              <feMerge>
-                <feMergeNode in="shadowOuter" />
-                <feMergeNode in="shadowMid" />
-                <feMergeNode in="coreSoft" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+
+            <filter id="neonGlowSoft" x="-7%" y="-20%" width="114%" height="140%">
+              <feGaussianBlur stdDeviation="10" />
             </filter>
-          )}
-        </defs>
 
-        <g transform={`rotate(${ROTATE} ${CX} ${CY})`}>
-          <path d={HALO} fill="none" stroke={C.halo} strokeWidth="18" opacity="0.22" filter="url(#neonGlowSoft)" />
+            <filter id="particleGlow" x="-3%" y="-6%" width="106%" height="112%">
+              <feGaussianBlur stdDeviation="1.4" />
+            </filter>
+            {/* Three stacked blurs give the comet its layered falloff on desktop.
+                On lite that's three full-surface convolutions per frame for an
+                effect nobody can resolve on a phone — one blur suffices. */}
+            {lite ? (
+              <filter id="cometGlow" x="-5%" y="-10%" width="110%" height="120%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="glow" />
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            ) : (
+              <filter id="cometGlow" x="-5%" y="-10%" width="110%" height="120%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4.4" result="shadowOuter" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2.1" result="shadowMid" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="coreSoft" />
+                <feMerge>
+                  <feMergeNode in="shadowOuter" />
+                  <feMergeNode in="shadowMid" />
+                  <feMergeNode in="coreSoft" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            )}
+          </defs>
 
-          {/* The 1.2% "breathing" scale is imperceptible but re-rasterises every
-              filtered child beneath it once per frame. Static on lite. */}
-          <motion.g
-            animate={lite ? undefined : { scale: [1, 1.012, 1] }}
-            transition={lite ? undefined : { duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transformOrigin: "400px 200px" }}
-          >
+          <g transform={`rotate(${ROTATE} ${CX} ${CY})`}>
+            <path d={HALO} fill="none" stroke={C.halo} strokeWidth="18" opacity="0.22" filter="url(#neonGlowSoft)" />
+
             <g filter="url(#neonGlow)">
               {strands.map((s, i) => (
-                <motion.path
+                <path
                   key={i}
+                  className={`neon-strand${s.reverse ? " neon-strand-rev" : ""}`}
+                  style={s.style}
                   d={s.d}
                   fill="none"
                   stroke={s.kind === "dark" ? C.strandDark[s.di] : s.kind === "crisp" ? C.crisp : C.strands[s.ci]}
@@ -268,24 +339,20 @@ export function NeonInfinity() {
                   strokeDasharray={s.dash}
                   opacity={s.opacity}
                   transform={`rotate(${s.rotate} ${CX} ${CY})`}
-                  animate={{ strokeDashoffset: [0, s.dir * -320] }}
-                  transition={{ duration: s.dur, repeat: Infinity, ease: "linear", delay: s.delay }}
                 />
               ))}
             </g>
 
             <g filter="url(#particleGlow)">
               {particles.map((p, i) => (
-                <motion.circle
+                <circle
                   key={i}
+                  className="neon-particle"
+                  style={p.style}
                   cx={p.x}
                   cy={p.y}
                   r={p.r}
                   fill={C.particles[p.ci]}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0.25, 1, 0.25], scale: [0.7, 1.15, 0.7] }}
-                  transition={{ duration: p.dur, repeat: Infinity, ease: "easeInOut", delay: p.delay }}
-                  style={{ transformOrigin: `${p.x}px ${p.y}px` }}
                 />
               ))}
             </g>
@@ -307,29 +374,24 @@ export function NeonInfinity() {
             </g>
 
             <g filter="url(#cometGlow)">
-              {pulses.map((pulse, pulseIndex) =>
-                PATH_FLARE.map((f, i) => (
-                  <motion.path
-                    key={`${pulseIndex}-${i}`}
-                    d={pulse.d}
-                    fill="none"
-                    stroke={C.flare[f.ci]}
-                    strokeWidth={f.width}
-                    strokeLinecap="round"
-                    opacity={f.opacity}
-                    strokeDasharray={`${f.seg} ${GUIDE_LEN}`}
-                    initial={{ strokeDashoffset: f.seg * 0.5 + pulse.phase }}
-                    animate={{
-                      strokeDashoffset: [f.seg * 0.5 + pulse.phase, f.seg * 0.5 + pulse.phase - GUIDE_LEN],
-                    }}
-                    transition={{ duration: pulse.dur, repeat: Infinity, ease: "linear" }}
-                  />
-                )),
-              )}
+              {comets.map((c) => (
+                <path
+                  key={c.key}
+                  className="neon-comet"
+                  style={c.style}
+                  d={c.d}
+                  fill="none"
+                  stroke={C.flare[c.ci]}
+                  strokeWidth={c.width}
+                  strokeLinecap="round"
+                  opacity={c.opacity}
+                  strokeDasharray={c.dash}
+                />
+              ))}
             </g>
-          </motion.g>
-        </g>
-      </motion.svg>
+          </g>
+        </svg>
+      </div>
     </div>
   );
 }

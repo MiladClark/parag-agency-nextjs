@@ -366,3 +366,178 @@ body.page-transition #page-content {
     animation: none !important;
   }
 }
+
+/* ---------- Neon infinity (hero) ----------
+
+   Every loop in this figure is a fixed, infinite, per-element cycle, so it is
+   driven by the browser's animation engine rather than by a JS runtime. The
+   Motion version updated ~124 SVG nodes from a rAF callback on every frame:
+   the main thread had to compute 124 values, write 124 attributes, and only
+   then could style/paint run. Declared as CSS keyframes the same motion is
+   sampled natively with zero script per frame, which is what the desktop frame
+   budget was actually going to.
+
+   Per-element timing arrives as custom properties (--nf-*) so the keyframes
+   themselves stay shared: 26 strands animate one pair of keyframes, not 26. */
+
+@keyframes neon-strand-fwd {
+  to {
+    stroke-dashoffset: -320;
+  }
+}
+@keyframes neon-strand-rev {
+  to {
+    stroke-dashoffset: 320;
+  }
+}
+@keyframes neon-particle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+/* The comet's start offset differs per flare layer, so from/to are read off the
+   element instead of being baked into the keyframe. */
+@keyframes neon-comet {
+  from {
+    stroke-dashoffset: var(--nf-from);
+  }
+  to {
+    stroke-dashoffset: var(--nf-to);
+  }
+}
+@keyframes neon-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.012);
+  }
+}
+@keyframes neon-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.neon-strand {
+  animation: neon-strand-fwd var(--nf-dur) linear var(--nf-delay) infinite;
+}
+.neon-strand-rev {
+  animation-name: neon-strand-rev;
+}
+
+/* Resting opacity is 0 so the fade-in matches the old `initial: { opacity: 0 }`
+   during the stagger delay, before the loop takes over. */
+.neon-particle {
+  opacity: 0;
+  animation: neon-particle var(--nf-dur) ease-in-out var(--nf-delay) infinite;
+}
+
+.neon-comet {
+  animation: neon-comet var(--nf-dur) linear infinite;
+}
+
+/* The breathing scale lives on the <svg> element, not on a <g> inside it. A
+   transform on an inner group sits above four filtered subtrees and forces the
+   entire filter chain to re-rasterise on the main thread every frame. On the
+   SVG element itself it is a compositor transform over already-rasterised
+   output. The figure is centred at (400,200) in an 800x400 viewBox — the exact
+   geometric centre — so scaling the element reproduces the previous transform
+   pixel for pixel. Tailwind's `scale-110` uses the standalone `scale` property,
+   which composes with this rather than overwriting it. */
+.neon-breathe {
+  animation: neon-breathe 8s ease-in-out infinite;
+  will-change: transform;
+}
+/* Below the desktop layout breakpoint the figure renders its reduced variant
+   and skips the breathing — the same condition as `useLiteMotion`, expressed
+   here so the element's class list can stay a static literal for Tailwind's
+   scanner. */
+@media (max-width: 1023px) {
+  .neon-breathe {
+    animation: none;
+    will-change: auto;
+  }
+}
+
+.neon-enter {
+  animation: neon-enter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Scrolled out of the hero: the figure is no longer on screen but its filter
+   regions stay in the compositing tree and keep re-rasterising. Pausing costs
+   one class toggle. */
+.neon-idle,
+.neon-idle * {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-strand,
+  .neon-particle,
+  .neon-comet,
+  .neon-breathe,
+  .neon-enter {
+    animation: none !important;
+  }
+  .neon-particle {
+    opacity: 0.55;
+  }
+}
+
+/* ---------- Ambient background orbs ----------
+
+   The orbs are painted radial-gradients rather than blurred circles (see
+   AmbientBackground.tsx), so the only per-frame work left is transform and
+   opacity — both composited. The centring translate has to be repeated inside
+   each keyframe, since an animation on `transform` replaces the whole value. */
+.amb-orb {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+@keyframes amb-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+}
+@keyframes amb-drift-a {
+  0%,
+  100% {
+    transform: translate(-50%, -50%);
+  }
+  50% {
+    transform: translate(calc(-50% + 40px), calc(-50% + 30px));
+  }
+}
+@keyframes amb-drift-b {
+  0%,
+  100% {
+    transform: translate(-50%, -50%);
+  }
+  50% {
+    transform: translate(calc(-50% - 30px), calc(-50% - 40px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .amb-orb {
+    animation: none !important;
+  }
+}
