@@ -191,6 +191,9 @@ export default async function Page({ params }: { params: Params }) {
                   <img
                     src={post.coverImage}
                     alt={post.title}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                   />
                 )}

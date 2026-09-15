@@ -101,6 +101,8 @@ function FeaturedInsight({ post }: { post: BlogPost }) {
               <img
                 src={post.coverImage}
                 alt={post.title}
+                loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
             ) : (
@@ -174,6 +176,8 @@ function SideInsight({ post, index }: { post: BlogPost; index: number }) {
             <img
               src={post.coverImage}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
           )}

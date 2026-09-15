@@ -12,7 +12,13 @@ export function BlogCard({ post }: { post: BlogPost }) {
         <div className={`relative aspect-[16/10] overflow-hidden ${post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-panel"}`}>
           {post.coverImage && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={post.coverImage} alt={post.title} className="h-full w-full object-cover" />
+            <img
+              src={post.coverImage}
+              alt={post.title}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" aria-hidden />
           <div className="absolute inset-0 flex items-start p-5">

@@ -146,7 +146,15 @@ function FloatingCover({
     >
       <div className={`absolute inset-0 bg-linear-to-br ${item.cover}`} />
       {item.coverImage && (
-        <Image src={item.coverImage} alt="" fill sizes="200px" className="object-cover" />
+        <Image
+          src={item.coverImage}
+          alt=""
+          fill
+          sizes="200px"
+          loading="eager"
+          fetchPriority={index === 0 ? "high" : "auto"}
+          className="object-cover"
+        />
       )}
       <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-3">

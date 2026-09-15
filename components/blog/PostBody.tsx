@@ -132,6 +132,8 @@ function Block({
             <img
               src={block.src}
               alt={block.alt}
+              loading="lazy"
+              decoding="async"
               className="w-full transition-transform duration-700 ease-out hover:scale-[1.015]"
             />
           </div>

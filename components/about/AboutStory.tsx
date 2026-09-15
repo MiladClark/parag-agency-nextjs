@@ -26,7 +26,7 @@ export function AboutStory({
             fill
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover"
-            priority={false}
+            loading="lazy"
           />
           <div
             className="pointer-events-none absolute inset-0 bg-linear-to-t from-surface via-surface/20 to-transparent lg:bg-linear-to-l"

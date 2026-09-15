@@ -10,7 +10,13 @@ export function AuthorAvatar({ author, size = "md" }: { author: BlogAuthor; size
     >
       {author.avatar ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={author.avatar} alt={author.name} className="h-full w-full object-cover" />
+        <img
+          src={author.avatar}
+          alt={author.name}
+          loading="eager"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
       ) : (
         author.name.charAt(0)
       )}

@@ -65,7 +65,15 @@ export function MobileMenu({
           />
 
           <div className="flex h-[4.5rem] shrink-0 items-center justify-between px-5">
-            <img src="/logo-mark.svg" alt="پاراگ" className="h-9 w-9" width={36} height={36} />
+            <img
+              src="/logo-mark.svg"
+              alt="پاراگ"
+              loading="lazy"
+              decoding="async"
+              className="h-9 w-9"
+              width={36}
+              height={36}
+            />
             <button
               type="button"
               onClick={onClose}

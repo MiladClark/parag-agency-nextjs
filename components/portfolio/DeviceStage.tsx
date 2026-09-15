@@ -152,7 +152,15 @@ function PhoneFrame({
       style={{ ...style, transformStyle: "preserve-3d" }}
     >
       <div className="relative aspect-[9/19] w-full">
-        <Image src={src} alt="" fill sizes="180px" className="object-cover object-top" priority={primary} />
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes="180px"
+          loading="eager"
+          fetchPriority={primary ? "high" : "auto"}
+          className="object-cover object-top"
+        />
         <div className="absolute inset-x-[28%] top-1.5 h-1 rounded-full bg-white/15" aria-hidden />
       </div>
     </motion.div>

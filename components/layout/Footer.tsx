@@ -73,6 +73,7 @@ export function Footer() {
             <img
               src="/logo-mark.svg"
               alt="پاراگ"
+              loading="lazy"
               className="h-10 w-10 transition-transform duration-500 group-hover:rotate-[360deg]"
               width={40}
               height={40}

@@ -12,6 +12,8 @@ export function Loader({ label = "در حال بارگذاری…" }: { label?: 
         <img
           src={logoMark}
           alt="پاراگ"
+          loading="eager"
+          decoding="async"
           className="h-12 w-12"
           style={{ animation: "parag-pulse 1.6s ease-in-out infinite" }}
         />

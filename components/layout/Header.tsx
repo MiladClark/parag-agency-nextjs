@@ -92,6 +92,8 @@ export function Header() {
             <img
               src="/logo-mark.svg"
               alt="پاراگ"
+              loading="eager"
+              decoding="async"
               className="h-9 w-9 transition-transform duration-500 group-hover:rotate-[360deg] lg:hidden"
               width={36}
               height={36}
@@ -100,12 +102,16 @@ export function Header() {
               <img
                 src="/logo-big-light.svg"
                 alt="پاراگ"
+                loading="eager"
+                decoding="async"
                 className="theme-light-only h-12 w-auto"
                 height={48}
               />
               <img
                 src="/logo-big-dark.svg"
                 alt="پاراگ"
+                loading="eager"
+                decoding="async"
                 className="theme-dark-only h-12 w-auto"
                 height={48}
               />

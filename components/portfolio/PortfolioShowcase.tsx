@@ -102,7 +102,7 @@ function FeaturedCard({ item, reduce }: { item: PortfolioItem; reduce: boolean }
               src={item.coverImage}
               alt=""
               fill
-              priority
+              loading="lazy"
               sizes="(max-width: 1024px) 100vw, 60vw"
               className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
             />

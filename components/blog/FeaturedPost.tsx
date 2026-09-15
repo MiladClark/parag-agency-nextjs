@@ -17,7 +17,14 @@ export function FeaturedPost({ post }: { post: BlogPost }) {
       <div className={`relative min-h-64 overflow-hidden ${post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-surface"}`}>
         {post.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverImage} alt={post.title} className="h-full w-full object-cover" />
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" aria-hidden />
         <span className="absolute start-5 top-5 rounded-full bg-bg/70 px-3 py-1 text-xs font-medium text-text backdrop-blur-sm">

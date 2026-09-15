@@ -46,7 +46,7 @@ export function CaseGallery({ images }: { images: PortfolioGalleryImage[] }) {
                     fill
                     sizes="320px"
                     className="object-cover object-top"
-                    priority
+                    loading="lazy"
                   />
                 </motion.div>
               </AnimatePresence>
