@@ -144,6 +144,6 @@ export function xmlResponse(body: string): Response {
  * two consistent instead of advertising URLs nobody may crawl.
  */
 export async function indexingDisabled(): Promise<boolean> {
-  const { indexing } = await getSiteSettings();
-  return indexing.noindex === true;
+  const { indexing, availability } = await getSiteSettings();
+  return indexing.noindex === true || availability.mode !== "live";
 }

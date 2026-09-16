@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "@/components/site-status/site-status.css";
 import { AppShell } from "@/components/layout/AppShell";
 import { CmsSiteIntegrations } from "@/components/seo/CmsSiteIntegrations";
 import { buildVerification, LOCALE, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { getSiteSettings } from "@/lib/siteSettings";
 import { themeInitScript } from "@/lib/theme";
+import { SiteStatus } from "@/components/site-status/SiteStatus";
 
 // Site-level structured data: who publishes this, and how to search it. Emitted
 // once from the root layout so every page inherits it.
@@ -51,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords,
     verification: buildVerification(settings),
     openGraph: { siteName: SITE_NAME, locale: LOCALE, type: "website" },
-    ...(settings.indexing.noindex
+    ...(settings.indexing.noindex || settings.availability.mode !== "live"
       ? {
           robots: {
             index: false,
@@ -76,12 +78,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-screen antialiased">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
-        />
-        <CmsSiteIntegrations settings={settings} />
-        <AppShell>{children}</AppShell>
+        {settings.availability.mode === "live" ? (
+          <>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
+            <CmsSiteIntegrations settings={settings} />
+            <AppShell>{children}</AppShell>
+          </>
+        ) : (
+          <SiteStatus mode={settings.availability.mode} message={settings.availability.message} />
+        )}
       </body>
     </html>
   );

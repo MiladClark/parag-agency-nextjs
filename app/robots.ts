@@ -5,9 +5,9 @@ import { SITE_URL } from "@/lib/seo";
 // The other half of the CMS indexing switch: the meta tag tells a crawler not to
 // index a page it has already fetched, this tells it not to fetch at all.
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const { indexing } = await getSiteSettings();
+  const { indexing, availability } = await getSiteSettings();
 
-  if (indexing.noindex) {
+  if (indexing.noindex || availability.mode !== "live") {
     return { rules: { userAgent: "*", disallow: "/" } };
   }
 
