@@ -31,6 +31,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Turbopack runs PostCSS in a child process and talks to it over a loopback
+  // socket. On the production host that process exits 0 before the handshake,
+  // which panics the build on the first CSS file (site-status.css). Worker
+  // threads keep the same PostCSS pipeline inside this process.
+  experimental: {
+    turbopackPluginRuntimeStrategy: "workerThreads",
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
