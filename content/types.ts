@@ -37,6 +37,7 @@ export interface SiteSettings {
     phone?: string;
     email?: string;
     address?: string;
+    postalCode?: string;
     whatsapp?: string;
   };
   social: SocialLink[];

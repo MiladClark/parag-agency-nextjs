@@ -136,11 +136,19 @@ export function Footer() {
             </a>
           )}
           {contact.address && (
-            <span className="flex items-center gap-2.5 text-sm text-text-muted">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <span className="flex items-start gap-2.5 text-sm leading-7 text-text-muted">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
                 <Icon name="map" />
               </span>
-              {contact.address}
+              <span>
+                {contact.address}
+                {contact.postalCode && (
+                  <>
+                    <br />
+                    کد پستی: {contact.postalCode}
+                  </>
+                )}
+              </span>
             </span>
           )}
         </FooterColumn>

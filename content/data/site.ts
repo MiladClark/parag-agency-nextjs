@@ -27,7 +27,9 @@ export const siteSettings: SiteSettings = {
   contact: {
     phone: "۰۲۱-۱۲۳۴۵۶۷۸",
     email: "hello@parag.agency",
-    address: "تهران، ایران",
+    address:
+      "تهران، میدان فاطمی، خیابان گلها، نرسیده به میدان گلها، نبش کوچه ۲/۱، پلاک ۸۵، طبقه دوم",
+    postalCode: "۱۴۳۱۶۱۴۴۸۳",
     whatsapp: "https://wa.me/989000000000",
   },
   social: [

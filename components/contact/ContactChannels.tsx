@@ -11,6 +11,7 @@ type Contact = {
   phone?: string;
   email?: string;
   address?: string;
+  postalCode?: string;
   whatsapp?: string;
 };
 
@@ -49,7 +50,9 @@ export function ContactChannels({
           id: "address",
           icon: "map",
           label: "آدرس",
-          value: contact.address,
+          value: contact.postalCode
+            ? `${contact.address}\nکد پستی: ${contact.postalCode}`
+            : contact.address,
           href: undefined as string | undefined,
         }
       : null,
@@ -191,6 +194,8 @@ function ChannelRow({
   href?: string;
   reduce: boolean;
 }) {
+  const multiline = value.includes("\n") || value.length > 48;
+
   const inner = (
     <>
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent transition-colors duration-300 group-hover:bg-accent group-hover:text-white">
@@ -198,7 +203,13 @@ function ChannelRow({
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="text-[11px] text-text-muted">{label}</span>
-        <span className="truncate text-sm font-bold text-text">{value}</span>
+        <span
+          className={`text-sm font-bold text-text ${
+            multiline ? "whitespace-pre-line leading-6" : "truncate"
+          }`}
+        >
+          {value}
+        </span>
       </span>
       {href && (
         <ArrowUpLeft className="h-3.5 w-3.5 shrink-0 text-text-muted opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:text-accent" />
@@ -206,8 +217,9 @@ function ChannelRow({
     </>
   );
 
-  const className =
-    "group flex w-full items-center gap-3 rounded-2xl border border-transparent bg-surface/40 px-3 py-2.5 transition-all duration-300 hover:border-accent/25 hover:bg-surface/80";
+  const className = multiline
+    ? "group flex w-full items-start gap-3 rounded-2xl border border-transparent bg-surface/40 px-3 py-2.5 transition-all duration-300 hover:border-accent/25 hover:bg-surface/80"
+    : "group flex w-full items-center gap-3 rounded-2xl border border-transparent bg-surface/40 px-3 py-2.5 transition-all duration-300 hover:border-accent/25 hover:bg-surface/80";
 
   if (href) {
     return (

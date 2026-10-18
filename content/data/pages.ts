@@ -27,6 +27,15 @@ export const pages: Record<string, PageContent> = {
         logo: `${SITE_URL}/logo.png`,
         description:
           "آژانس دیجیتال مارکتینگ پاراگ؛ سئو، تبلیغات آنلاین، تولید محتوا، برندینگ و مشاوره رشد کسب‌وکار.",
+        address: {
+          "@type": "PostalAddress",
+          addressCountry: "IR",
+          addressLocality: "تهران",
+          addressRegion: "تهران",
+          streetAddress:
+            "میدان فاطمی، خیابان گلها، نرسیده به میدان گلها، نبش کوچه ۲/۱، پلاک ۸۵، طبقه دوم",
+          postalCode: "1431614483",
+        },
         contactPoint: [
           {
             "@type": "ContactPoint",
