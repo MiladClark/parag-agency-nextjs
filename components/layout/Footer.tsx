@@ -1,5 +1,8 @@
 "use client";
 
+import { useCmsContact } from "@/components/contact/ContactProvider";
+import { phoneHref } from "@/lib/contact";
+
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowUp, ChevronLeft } from "lucide-react";
 import { siteSettings } from "../../content/data/site";
@@ -19,7 +22,8 @@ const quickLinks = [
 
 export function Footer() {
   const reduce = useReducedMotion();
-  const { contact, social } = siteSettings;
+  const contact = { ...siteSettings.contact, ...useCmsContact() };
+  const { social } = siteSettings;
   const year = toPersianDigits(new Date().getFullYear());
 
   return (
@@ -117,12 +121,12 @@ export function Footer() {
         {/* Contact */}
         <FooterColumn title="در تماس باشیم">
           {contact.phone && (
-            <span className="flex items-center gap-2.5 text-sm text-text-muted">
+            <a href={`tel:${contact.phoneIntl || phoneHref(contact.phone)}`} className="flex items-center gap-2.5 text-sm text-text-muted hover:text-accent">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-soft text-accent">
                 <Icon name="phone" />
               </span>
               {contact.phone}
-            </span>
+            </a>
           )}
           {contact.email && (
             <a

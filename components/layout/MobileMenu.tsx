@@ -1,5 +1,7 @@
 "use client";
 
+import { useCmsContact } from "@/components/contact/ContactProvider";
+
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -28,6 +30,7 @@ export function MobileMenu({
   onClose: () => void;
   path: string;
 }) {
+  const contact = { ...siteSettings.contact, ...useCmsContact() };
   const reduce = useReducedMotion();
   const [mounted, setMounted] = useState(false);
 
@@ -153,9 +156,9 @@ export function MobileMenu({
                   </a>
                 ))}
               </div>
-              {siteSettings.contact.phone && (
+              {contact.phone && (
                 <span className="text-sm font-bold text-text-muted">
-                  {siteSettings.contact.phone}
+                  {contact.phone}
                 </span>
               )}
             </motion.div>

@@ -1,3 +1,4 @@
+import { ContactProvider } from "@/components/contact/ContactProvider";
 import type { Metadata } from "next";
 import "./globals.css";
 import "@/components/site-status/site-status.css";
@@ -78,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-screen antialiased">
+        <ContactProvider contact={settings.contact}>
         {settings.availability.mode === "live" ? (
           <>
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
@@ -87,6 +89,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : (
           <SiteStatus mode={settings.availability.mode} message={settings.availability.message} />
         )}
+        </ContactProvider>
       </body>
     </html>
   );

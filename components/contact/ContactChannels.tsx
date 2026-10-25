@@ -1,5 +1,6 @@
 "use client";
 
+import { directionsUrl, phoneHref, type CmsContact } from "@/lib/contact";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowUpLeft, Clock3, MessageCircle } from "lucide-react";
 import { Icon } from "../ui/Icon";
@@ -7,13 +8,7 @@ import { Icon } from "../ui/Icon";
 const SPRING = { type: "spring", stiffness: 320, damping: 24 } as const;
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-type Contact = {
-  phone?: string;
-  email?: string;
-  address?: string;
-  postalCode?: string;
-  whatsapp?: string;
-};
+type Contact = CmsContact;
 
 type Social = { label: string; href: string; icon: string };
 
@@ -33,7 +28,7 @@ export function ContactChannels({
           icon: "phone",
           label: "تلفن",
           value: contact.phone,
-          href: `tel:${toTelHref(contact.phone)}`,
+          href: `tel:${contact.phoneIntl || phoneHref(contact.phone)}`,
         }
       : null,
     contact.email
@@ -50,12 +45,12 @@ export function ContactChannels({
           id: "address",
           icon: "map",
           label: "آدرس",
-          value: contact.postalCode
-            ? `${contact.address}\nکد پستی: ${contact.postalCode}`
-            : contact.address,
-          href: undefined as string | undefined,
+          value: contact.address,
+          href: directionsUrl(contact),
         }
       : null,
+    contact.postalCode ? { id: "postal", icon: "map", label: "کد پستی", value: contact.postalCode, href: undefined } : null,
+    contact.hours ? { id: "hours", icon: "clock", label: "ساعات پاسخ‌گویی", value: contact.hours, href: undefined } : null,
   ].filter(Boolean) as {
     id: string;
     icon: string;
@@ -176,10 +171,6 @@ export function ContactChannels({
   );
 }
 
-function toTelHref(phone: string) {
-  const normalized = phone.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
-  return normalized.replace(/[^\d+]/g, "");
-}
 
 function ChannelRow({
   icon,

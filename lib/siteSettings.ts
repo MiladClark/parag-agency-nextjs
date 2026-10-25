@@ -1,3 +1,4 @@
+import { normalizeContact, type CmsContact } from "@/lib/contact";
 import { CURRENT_TENANT } from "@/content/tenant";
 
 // Per-site settings owned by the shared Payload panel (websites → «سئو و تحلیل»).
@@ -7,6 +8,7 @@ const PAYLOAD_URL = process.env.PAYLOAD_URL || "http://localhost:3601";
 const REVALIDATE_SECONDS = 30;
 
 export type CmsSiteSettings = {
+  contact: CmsContact;
   tenant: { slug: string; name: string | null; domain: string | null };
   seo: { primaryKeyword: string | null };
   indexing: { noindex: boolean };
@@ -29,6 +31,7 @@ export type CmsSiteSettings = {
 };
 
 const DEFAULTS: CmsSiteSettings = {
+  contact: {},
   tenant: { slug: CURRENT_TENANT, name: null, domain: null },
   seo: { primaryKeyword: null },
   indexing: { noindex: false },
@@ -52,6 +55,7 @@ export async function getSiteSettings(): Promise<CmsSiteSettings> {
     );
     if (!res.ok) throw new Error(`settings ${res.status}`);
     const data = (await res.json()) as Partial<{
+      contact: unknown;
       tenant: { slug?: string; name?: string | null; domain?: string | null };
       seo: { primaryKeyword?: string | null };
       indexing: { noindex?: boolean };
@@ -62,6 +66,7 @@ export async function getSiteSettings(): Promise<CmsSiteSettings> {
     }>;
 
     return {
+      contact: normalizeContact(data.contact),
       tenant: {
         slug: data.tenant?.slug || CURRENT_TENANT,
         name: asTrimmed(data.tenant?.name),

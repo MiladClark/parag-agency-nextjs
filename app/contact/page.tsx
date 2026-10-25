@@ -1,3 +1,4 @@
+import { getSiteSettings } from "@/lib/siteSettings";
 import type { Metadata } from "next";
 import { getContentRepository } from "@/content/repository";
 import { buildMetadata } from "@/lib/seo";
@@ -13,9 +14,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const repo = getContentRepository();
-  const [page, settings] = await Promise.all([repo.getPage("contact"), repo.getSiteSettings()]);
+  const [page, settings, cms] = await Promise.all([repo.getPage("contact"), repo.getSiteSettings(), getSiteSettings()]);
   if (!page) return null;
-  const { contact, social } = settings;
+  const contact = { ...settings.contact, ...cms.contact };
+  const { social } = settings;
 
   return (
     <div className="relative pb-10 sm:pb-14">
