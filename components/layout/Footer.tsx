@@ -1,7 +1,7 @@
 "use client";
 
 import { useCmsContact } from "@/components/contact/ContactProvider";
-import { phoneHref } from "@/lib/contact";
+import { directionsUrl, phoneHref } from "@/lib/contact";
 
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowUp, ChevronLeft } from "lucide-react";
@@ -140,7 +140,7 @@ export function Footer() {
             </a>
           )}
           {contact.address && (
-            <span className="flex items-start gap-2.5 text-sm leading-7 text-text-muted">
+            <a href={directionsUrl(contact)} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2.5 text-sm leading-7 text-text-muted transition-colors hover:text-accent">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
                 <Icon name="map" />
               </span>
@@ -153,7 +153,13 @@ export function Footer() {
                   </>
                 )}
               </span>
-            </span>
+            </a>
+          )}
+          {contact.hours && <p className="text-sm leading-7 text-text-muted">{contact.hours}</p>}
+          {contact.whatsapp && (
+            <a href={contact.whatsapp} target="_blank" rel="noopener noreferrer" className="text-sm text-text-muted transition-colors hover:text-accent">
+              گفت‌وگو در واتس‌اپ
+            </a>
           )}
         </FooterColumn>
       </div>

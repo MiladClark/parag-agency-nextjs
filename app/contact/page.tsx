@@ -5,6 +5,7 @@ import { buildMetadata } from "@/lib/seo";
 import { ContactHero } from "@/components/contact/ContactHero";
 import { ContactChannels } from "@/components/contact/ContactChannels";
 import { ContactForm } from "@/components/ContactForm";
+import { AgencyLocation } from "@/components/contact/AgencyLocation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const repo = getContentRepository();
@@ -46,6 +47,7 @@ export default async function Page() {
           </div>
         </div>
       </section>
+      <AgencyLocation contact={contact} />
     </div>
   );
 }

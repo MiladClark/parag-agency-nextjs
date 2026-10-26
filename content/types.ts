@@ -35,10 +35,15 @@ export interface SiteSettings {
   nav: NavItem[];
   contact: {
     phone?: string;
+    phoneIntl?: string;
     email?: string;
     address?: string;
     postalCode?: string;
     whatsapp?: string;
+    hours?: string;
+    mapUrl?: string;
+    latitude?: number;
+    longitude?: number;
   };
   social: SocialLink[];
 }

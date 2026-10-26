@@ -1,6 +1,7 @@
 "use client";
 
 import { useCmsContact } from "@/components/contact/ContactProvider";
+import { phoneHref } from "@/lib/contact";
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -157,9 +158,9 @@ export function MobileMenu({
                 ))}
               </div>
               {contact.phone && (
-                <span className="text-sm font-bold text-text-muted">
+                <a href={`tel:${contact.phoneIntl || phoneHref(contact.phone)}`} dir="ltr" className="text-sm font-bold text-text-muted">
                   {contact.phone}
-                </span>
+                </a>
               )}
             </motion.div>
           </nav>

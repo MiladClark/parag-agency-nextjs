@@ -25,12 +25,15 @@ export const siteSettings: SiteSettings = {
     { label: "تماس با ما", href: "/contact" },
   ],
   contact: {
-    phone: "۰۲۱-۱۲۳۴۵۶۷۸",
-    email: "hello@parag.agency",
+    phone: "۰۲۱-۹۱۳۰۰۲۳۲",
+    phoneIntl: "+982191300232",
+    email: "info@parag.ir",
     address:
-      "تهران، میدان فاطمی، خیابان گلها، نرسیده به میدان گلها، نبش کوچه ۲/۱، پلاک ۸۵، طبقه دوم",
+      "تهران، میدان فاطمی، خیابان گل‌ها، نرسیده به میدان گل‌ها، نبش کوچه ۲/۱، پلاک ۸۵، طبقه دوم",
     postalCode: "۱۴۳۱۶۱۴۴۸۳",
-    whatsapp: "https://wa.me/989000000000",
+    whatsapp: "",
+    latitude: 35.72165,
+    longitude: 51.4015,
   },
   social: [
     { label: "اینستاگرام", href: "https://instagram.com/parag.agency", icon: "instagram" },
