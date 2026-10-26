@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getContentRepository } from "@/content/repository";
 import { buildMetadata } from "@/lib/seo";
 import { AmbientBackground } from "@/components/home/AmbientBackground";
+import { HomeSmoothScroll } from "@/components/home/HomeSmoothScroll";
 import { ScrollJourneyLine } from "@/components/home/ScrollJourneyLine";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { ManifestoReveal } from "@/components/home/ManifestoReveal";
@@ -49,6 +50,7 @@ export default async function Page() {
         />
       )}
       <AmbientBackground />
+      <HomeSmoothScroll />
       <div className="relative">
         <ScrollJourneyLine />
         <CinematicHero hero={page!.hero} />

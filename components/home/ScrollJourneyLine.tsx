@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, useScroll, useSpring, useTransform } from "motion/react";
+import { useEffect, useId, useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { useLiteMotion } from "../../lib/useMediaQuery";
+import { weavePath } from "../../lib/journeyGeometry";
 
 // One continuous centre-weave thread (original geometry). Draw length is tied to
 // the viewport vertical centre so the line grows *with* the reader:
@@ -16,73 +17,33 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
-function smoothPath(pts: Pt[]): string {
-  if (pts.length < 2) return "";
-  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[i + 2] ?? p2;
-    const c1x = p1.x + (p2.x - p0.x) / 6;
-    const c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6;
-    const c2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-  }
-  return d;
-}
-
-/** Append cubic curves for pts[1…] — current pen position must be pts[0]. */
-function appendSmooth(d: string, pts: Pt[]): string {
-  if (pts.length < 2) return d;
-  const seg = smoothPath(pts);
-  const i = seg.indexOf(" C ");
-  return i >= 0 ? d + seg.slice(i) : d;
-}
-
-/** Centre hook → straight rail through nodes → centre weave to footer. */
+/** Broad continuous curves meet the pinned track with vertical, zero-curvature tangents. */
 function buildRoute(w: number, h: number, startY: number, nodes: Pt[]): string {
   if (!nodes.length) {
     const span = h - startY;
-    return smoothPath(COLS.map((c, i) => ({ x: c * w, y: startY + (i / (COLS.length - 1)) * span })));
+    return weavePath(COLS.map((c, i) => ({ x: c * w, y: startY + (i / (COLS.length - 1)) * span })));
   }
 
   const first = nodes[0];
   const last = nodes[nodes.length - 1];
-  const gap = first.y - startY;
   const tailSpan = h - last.y;
 
-  // Entry — lazy curve from centre, then align vertically before node 1 (no kink).
-  const lead: Pt[] = [
+  let d = weavePath([
     { x: w * 0.5, y: startY },
-    { x: w * 0.52, y: startY + gap * 0.42 },
-    { x: w * 0.52 + (first.x - w * 0.52) * 0.32, y: startY + gap * 0.76 },
-    { x: first.x, y: first.y - 40 },
     first,
-  ];
-
-  let d = smoothPath(lead);
-
-  // Node 2 → 4: straight vertical rail.
-  for (let i = 1; i < nodes.length; i++) {
-    d += ` L ${nodes[i].x.toFixed(1)} ${nodes[i].y.toFixed(1)}`;
-  }
-
-  // Exit — drop vertically off node 4, then lazy S back to centre weave.
-  const dropY = last.y + Math.min(52, tailSpan * 0.07);
-  const easeY = last.y + Math.min(130, tailSpan * 0.16);
+  ]);
+  // This connector is clipped out; the pinned track supplies its visible geometry.
+  d += ` L ${last.x.toFixed(3)} ${last.y.toFixed(3)}`;
   const departure: Pt[] = [
     last,
-    { x: last.x, y: dropY },
-    { x: last.x + (w * 0.5 - last.x) * 0.16, y: easeY },
     { x: w * 0.5, y: last.y + tailSpan * 0.26 },
     { x: w * 0.6, y: last.y + tailSpan * 0.52 },
     { x: w * 0.44, y: last.y + tailSpan * 0.76 },
     { x: w * 0.5, y: h },
   ];
 
-  return appendSmooth(d, departure);
+  const tail = weavePath(departure);
+  return d + tail.slice(tail.indexOf(" C "));
 }
 
 function measurePath(d: string): number {
@@ -118,9 +79,10 @@ type Metrics = {
 };
 
 export function ScrollJourneyLine() {
+  const clipId = useId().replace(/:/g, "");
   const wrapRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<Metrics | null>(null);
-  const [box, setBox] = useState<{ w: number; h: number; d: string } | null>(null);
+  const [box, setBox] = useState<{ w: number; h: number; d: string; entry: number; exit: number } | null>(null);
   // The line is `hidden sm:block`, but display:none only stops it painting —
   // the path measurement (getTotalLength plus a 28-step binary search per
   // node), the ResizeObserver and the scroll spring all still ran on phones for
@@ -128,9 +90,7 @@ export function ScrollJourneyLine() {
   const lite = useLiteMotion();
 
   const { scrollY } = useScroll();
-  const smoothY = useSpring(scrollY, { stiffness: 90, damping: 30, mass: 0.4 });
-
-  const drawn = useTransform(smoothY, (sy) => {
+  const drawn = useTransform(scrollY, (sy) => {
     const m = metricsRef.current;
     if (!m || m.lenTotal <= 0) return 0;
 
@@ -200,7 +160,7 @@ export function ScrollJourneyLine() {
         lenFirst: nodes.length ? pathLengthAtY(d, journeyStartY, lenTotal) : lenTotal,
         lenLast: nodes.length ? pathLengthAtY(d, journeyEndY, lenTotal) : lenTotal,
       };
-      setBox({ w, h, d });
+      setBox({ w, h, d, entry: journeyStartY, exit: journeyEndY });
     };
 
     build();
@@ -224,6 +184,13 @@ export function ScrollJourneyLine() {
     >
       {box && !lite && (
         <svg className="h-full w-full" viewBox={`0 0 ${box.w} ${box.h}`} fill="none">
+          <defs>
+            <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+              <rect width={box.w} height={box.entry} />
+              <rect y={box.exit} width={box.w} height={Math.max(0, box.h - box.exit)} />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${clipId})`}>
           <motion.path
             d={box.d}
             stroke="var(--accent)"
@@ -233,6 +200,7 @@ export function ScrollJourneyLine() {
             strokeLinejoin="round"
             style={{ pathLength: drawn }}
           />
+          </g>
         </svg>
       )}
     </div>

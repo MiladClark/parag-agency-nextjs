@@ -1,159 +1,117 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
+import { motion, useMotionValueEvent, useScroll, useTransform, type MotionValue } from "motion/react";
 import { journeySteps } from "../../content/data/home";
-import { Section } from "../ui/Section";
-import { SectionIntro } from "../ui/SectionIntro";
-import { Icon } from "../ui/Icon";
+import { DESKTOP_QUERY, useMediaQuery } from "../../lib/useMediaQuery";
+import { buildJourneyGeometry, JOURNEY_ENTRY_X, JOURNEY_EXIT_X } from "../../lib/journeyGeometry";
+import "./journey-steps.css";
 
-// Pinned scrollytelling: a sticky 3D visual reacts to the active step as the
-// steps scroll past on the other side, connected by a live timeline rail.
+const artwork = ["discovery", "strategy", "creativity", "growth"];
+const tilts = [-8, 7, -6, 5];
+
+function JourneyHeading() {
+  return <h2 id="journey-title" className="journey-heading">چطور برند شما را <span className="text-gradient">رشد می‌دهیم</span></h2>;
+}
+
 export function JourneySteps() {
+  const desktop = useMediaQuery(DESKTOP_QUERY);
+  const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
+  return desktop && !reduced ? <PinnedJourney /> : <SwipeJourney reduced={reduced} />;
+}
+
+function PinnedJourney() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef(0);
   const [active, setActive] = useState(0);
-  const current = journeySteps[active];
+  const [size, setSize] = useState({ w: 1280, h: 800 });
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
+  const { scrollYProgress: entryDrawn } = useScroll({ target: sectionRef, offset: ["start center", "start start"] });
+  const { scrollYProgress: exitDrawn } = useScroll({ target: sectionRef, offset: ["end end", "end center"] });
+  // Direct scroll mapping: no chapter holds, easing plateaus, or snapping.
+  const chapter = scrollYProgress;
+  const x = useTransform(chapter, value => -value * size.w * 3);
+
+  useMotionValueEvent(chapter, "change", value => {
+    const next = Math.min(3, Math.max(0, Math.round(value * 3)));
+    if (next !== activeRef.current) {
+      activeRef.current = next;
+      setActive(next);
+    }
+  });
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const observer = new ResizeObserver(() => setSize({ w: stage.clientWidth, h: stage.clientHeight }));
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
+  const { w, h } = size;
+  const { entry, middle, exit } = buildJourneyGeometry(w, h);
 
   return (
-    <Section>
-      <SectionIntro
-        className="mb-16 sm:mb-20"
-        title="چطور برند شما را"
-        accent="رشد می‌دهیم"
-        body="از کشف تا بهینه‌سازی، یک مسیر روشن و مشترک برای رسیدن به نتیجه."
-      />
-
-      <div className="grid gap-12 lg:grid-cols-2">
-        {/* Steps with timeline rail (right in RTL) */}
-        <div className="relative flex flex-col">
-          {/* Static track — scroll line draws through the nodes. Inset must
-              match half a step's height so it starts and ends on a node. */}
-          <div
-            className="absolute bottom-[20vh] right-[1.15rem] top-[20vh] w-px bg-border/60 lg:bottom-[30vh] lg:top-[30vh]"
-            aria-hidden
-          />
-
-          {journeySteps.map((step, i) => (
-            <motion.div
-              key={step.index}
-              onViewportEnter={() => setActive(i)}
-              viewport={{ margin: "-50% 0px -50% 0px" }}
-              // 60vh a step is four near-empty screens once the layout stacks;
-              // 40vh keeps the one-step-at-a-time pacing without the dead space.
-              className="relative flex min-h-[40vh] items-center gap-4 pr-10 sm:gap-6 sm:pr-12 lg:min-h-[60vh]"
-            >
-              {/* node */}
-              <span
-                data-journey-node
-                className={`absolute right-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                  active === i
-                    ? "scale-110 border-accent bg-accent shadow-lg shadow-accent/40"
-                    : "border-border bg-surface"
-                }`}
-                aria-hidden
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${active === i ? "bg-white" : "bg-border"}`} />
-              </span>
-
-              <div className="flex flex-col gap-4">
-                <span className="text-sm font-bold text-accent">{step.index}</span>
-                {/* Inactive steps dim heavily so the active one leads the eye.
-                    That reads on the desktop layout, where the sticky 3D panel
-                    carries the section and several steps share the viewport. On
-                    a stacked layout the neighbours are mostly offscreen anyway
-                    and /30 body text is simply unreadable, so phones and
-                    tablets keep a legible floor. */}
-                <h3
-                  className={`text-xl font-bold transition-colors duration-300 sm:text-2xl lg:text-3xl ${
-                    active === i ? "text-text" : "text-text-muted/70 lg:text-text-muted/40"
-                  }`}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  className={`max-w-md text-sm leading-7 transition-colors duration-300 sm:text-base sm:leading-8 ${
-                    active === i ? "text-text-muted" : "text-text-muted/60 lg:text-text-muted/30"
-                  }`}
-                >
-                  {step.body}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Sticky 3D visual (left in RTL) — centered in the viewport while sticky */}
-        <div className="hidden lg:block">
-          <div className="sticky top-0 flex h-screen items-center justify-center" style={{ perspective: 1200 }}>
-            <motion.div
-              animate={{ rotateY: [-6, 6, -6], rotateX: [3, -3, 3] }}
-              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-              style={{ transformStyle: "preserve-3d" }}
-              className="glass shadow-depth relative flex h-[30rem] w-full flex-col items-center justify-center overflow-hidden rounded-[2.25rem]"
-            >
-              {/* ambient glow reacting to step */}
-              <motion.div
-                key={`glow-${current.index}`}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="pointer-events-none absolute -top-24 right-1/2 h-80 w-80 translate-x-1/2 rounded-full bg-accent/25 blur-3xl"
-                aria-hidden
-              />
-
-              {/* rotating ring */}
-              <motion.div
-                className="pointer-events-none absolute h-72 w-72 rounded-full border border-dashed border-accent/30"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                style={{ transform: "translateZ(-30px)" }}
-                aria-hidden
-              />
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={current.index}
-                  initial={{ opacity: 0, rotateY: 90, z: -60 }}
-                  animate={{ opacity: 1, rotateY: 0, z: 0 }}
-                  exit={{ opacity: 0, rotateY: -90, z: -60 }}
-                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ transformStyle: "preserve-3d" }}
-                  className="relative flex flex-col items-center gap-6"
-                >
-                  <span
-                    className="absolute text-[10rem] font-extrabold leading-none text-text/[0.05]"
-                    style={{ transform: "translateZ(-40px)" }}
-                  >
-                    {current.index}
-                  </span>
-                  <span
-                    className="flex h-32 w-32 items-center justify-center rounded-[2rem] bg-gradient-to-br from-accent to-accent-hover text-7xl text-white shadow-2xl shadow-accent/40"
-                    style={{ transform: "translateZ(70px)" }}
-                  >
-                    <Icon name={current.icon} />
-                  </span>
-                  <span
-                    className="rounded-full bg-panel px-5 py-2 text-base font-bold text-text shadow-lg"
-                    style={{ transform: "translateZ(40px)" }}
-                  >
-                    {current.title}
-                  </span>
-                </motion.div>
-              </AnimatePresence>
-
-              {/* progress rail */}
-              <div className="absolute bottom-8 flex items-center gap-2" style={{ transform: "translateZ(30px)" }}>
-                {journeySteps.map((s, i) => (
-                  <span
-                    key={s.index}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      active === i ? "w-8 bg-accent" : "w-1.5 bg-border"
-                    }`}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </div>
+    <section ref={sectionRef} className="journey-sequence journey-sequence-pinned" aria-labelledby="journey-title" data-journey-mode="pinned">
+      <span data-journey-node className="journey-boundary journey-boundary-entry" style={{ left: `${JOURNEY_ENTRY_X * 100}%` }} aria-hidden />
+      <span data-journey-node className="journey-boundary journey-boundary-exit" style={{ left: `${JOURNEY_EXIT_X * 100}%` }} aria-hidden />
+      <div ref={stageRef} className="journey-stage">
+        <div className="journey-heading-wrap"><JourneyHeading /></div>
+        <motion.div className="journey-track" style={{ x }} dir="ltr">
+          <svg className="journey-thread" viewBox={`0 0 ${w * 4} ${h}`} preserveAspectRatio="none" fill="none" aria-hidden>
+            <motion.path d={entry} stroke="var(--accent)" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" style={{ pathLength: entryDrawn }} />
+            <motion.path d={middle} stroke="var(--accent)" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" style={{ pathLength: chapter }} />
+            <motion.path d={exit} stroke="var(--accent)" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" style={{ pathLength: exitDrawn }} />
+          </svg>
+          {journeySteps.map((step, i) => <JourneyPanel key={step.index} index={i} progress={chapter} active={active === i} />)}
+        </motion.div>
+        <p className="sr-only" aria-live="polite">{journeySteps[active].title}</p>
       </div>
-    </Section>
+    </section>
+  );
+}
+
+function JourneyPanel({ index, progress, active }: { index: number; progress: MotionValue<number>; active: boolean }) {
+  const step = journeySteps[index];
+  const local = useTransform(progress, value => value * 3 - index);
+  const opacity = useTransform(local, [-0.85, -0.4, 0, 0.4, 0.85], [0.1, 0.65, 1, 0.65, 0.1]);
+  const textY = useTransform(local, [-1, 0, 1], [40, 0, -40]);
+  const textX = useTransform(local, [-1, 0, 1], [30, 0, -30]);
+  const artX = useTransform(local, [-1, 0, 1], [-60, 0, 60]);
+  const artY = useTransform(local, [-1, 0, 1], [35, 0, -35]);
+  const rotateY = useTransform(local, [-1, 0, 1], [12, -6, -16]);
+  const rotateZ = useTransform(local, [-1, 0, 1], [tilts[index] - 4, tilts[index], tilts[index] + 4]);
+  const scale = useTransform(local, [-1, 0, 1], [0.92, 1.08, 0.94]);
+  return (
+    <article className="journey-panel" dir="rtl" aria-hidden={!active} style={{ perspective: 1400 }}>
+      <motion.div className="journey-copy" style={{ y: textY, x: textX, opacity }}>
+        <h3>{step.title}</h3>
+        <p className="journey-description">{step.body}</p>
+      </motion.div>
+      <motion.div className="journey-art" style={{ x: artX, y: artY, rotateY, rotateZ, scale, opacity }} aria-hidden>
+        <Image src={`/images/journey/${artwork[index]}.webp`} alt="" width={900} height={900} sizes="48vw" unoptimized draggable={false} />
+      </motion.div>
+    </article>
+  );
+}
+
+function SwipeJourney({ reduced }: { reduced: boolean }) {
+  return (
+    <section className="journey-sequence journey-sequence-swipe" aria-labelledby="journey-title" data-journey-mode="swipe">
+      <div className="journey-mobile-heading"><JourneyHeading /></div>
+      <div className={`journey-swipe-rail${reduced ? " journey-static" : ""}`} dir="ltr" tabIndex={0} aria-label="مراحل همکاری">
+        {journeySteps.map((step, i) => (
+          <article className="journey-swipe-panel" key={step.index} dir="rtl">
+            <div className="journey-swipe-art" style={{ rotate: `${tilts[i]}deg` }} aria-hidden>
+              <Image src={`/images/journey/${artwork[i]}.webp`} alt="" width={900} height={900} sizes="(min-width: 768px) 60vw, 85vw" unoptimized draggable={false} />
+            </div>
+            <h3>{step.title}</h3>
+            <p className="journey-description">{step.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
