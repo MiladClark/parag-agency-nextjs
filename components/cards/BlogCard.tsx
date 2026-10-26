@@ -2,6 +2,7 @@ import type { BlogPost } from "../../content/types";
 import { categoryTitleOf } from "../../content/data/blog";
 import { formatJalaliDate, estimateReadingMinutes, toPersianDigits } from "../../lib/format";
 import { Clock } from "lucide-react";
+import { BlogCover } from "../blog/BlogCover";
 
 export function BlogCard({ post }: { post: BlogPost }) {
   const minutes = post.readingMinutes ?? estimateReadingMinutes(post.body);
@@ -10,16 +11,7 @@ export function BlogCard({ post }: { post: BlogPost }) {
     <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-panel transition-all duration-300 hover:-translate-y-1 hover:border-accent/40">
       <a href={`/blog/${post.slug}`} className="flex h-full flex-col">
         <div className={`relative aspect-[16/10] overflow-hidden ${post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-panel"}`}>
-          {post.coverImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={post.coverImage}
-              alt={post.title}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-            />
-          )}
+          <BlogCover src={post.coverImage} category={post.category} alt={post.title} sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" aria-hidden />
           <div className="absolute inset-0 flex items-start p-5">
             <span className="rounded-full bg-bg/70 px-3 py-1 text-xs font-medium text-text backdrop-blur-sm">

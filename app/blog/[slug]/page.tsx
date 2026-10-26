@@ -17,6 +17,7 @@ import { RelatedPosts } from "@/components/blog/RelatedPosts";
 import { PostComments } from "@/components/blog/PostComments";
 import { PostRatingWidget } from "@/components/blog/PostRatingWidget";
 import { ArticleReadingLayout } from "@/components/blog/ArticleReadingLayout";
+import { BlogCover } from "@/components/blog/BlogCover";
 
 type Params = Promise<{ slug: string }>;
 
@@ -186,17 +187,7 @@ export default async function Page({ params }: { params: Params }) {
                   post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-panel"
                 }`}
               >
-                {post.coverImage && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={post.coverImage}
-                    alt={post.title}
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-                  />
-                )}
+                <BlogCover src={post.coverImage} category={post.category} alt={post.title} format="hero" eager sizes="(min-width: 1152px) 1088px, 100vw" className="transition-transform duration-700 ease-out group-hover:scale-[1.02]" />
                 <div
                   className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
                   aria-hidden

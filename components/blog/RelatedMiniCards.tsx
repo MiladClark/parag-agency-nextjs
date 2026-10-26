@@ -1,6 +1,7 @@
 import type { BlogPost } from "../../content/types";
 import { estimateReadingMinutes, toPersianDigits } from "../../lib/format";
 import { Clock } from "lucide-react";
+import { BlogCover } from "./BlogCover";
 
 export function RelatedMiniCards({ posts }: { posts: BlogPost[] }) {
   if (!posts.length) return null;
@@ -22,16 +23,7 @@ export function RelatedMiniCards({ posts }: { posts: BlogPost[] }) {
                     post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-surface"
                   }`}
                 >
-                  {post.coverImage && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={post.coverImage}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  )}
+                  <BlogCover src={post.coverImage} category={post.category} format="thumbnail" sizes="56px" className="transition-transform duration-300 group-hover:scale-105" />
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
                   <span className="line-clamp-2 text-xs font-semibold leading-5 text-text transition-colors group-hover:text-accent">

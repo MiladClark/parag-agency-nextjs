@@ -4,6 +4,7 @@ import { estimateReadingMinutes } from "../../lib/format";
 import { Eyebrow } from "../ui/Section";
 import { PostMeta } from "./PostMeta";
 import { ArrowLeft } from "lucide-react";
+import { BlogCover } from "./BlogCover";
 
 // Large highlight banner for the newest featured post on the archive.
 export function FeaturedPost({ post }: { post: BlogPost }) {
@@ -15,17 +16,7 @@ export function FeaturedPost({ post }: { post: BlogPost }) {
       className="group grid overflow-hidden rounded-3xl border border-border bg-panel shadow-depth transition-colors hover:border-accent/40 lg:grid-cols-2"
     >
       <div className={`relative min-h-64 overflow-hidden ${post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-surface"}`}>
-        {post.coverImage && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={post.coverImage}
-            alt={post.title}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        )}
+        <BlogCover src={post.coverImage} category={post.category} alt={post.title} eager sizes="(min-width: 1024px) 560px, 100vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" aria-hidden />
         <span className="absolute start-5 top-5 rounded-full bg-bg/70 px-3 py-1 text-xs font-medium text-text backdrop-blur-sm">
           {categoryTitleOf(post.category)}

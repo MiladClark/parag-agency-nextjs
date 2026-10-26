@@ -11,6 +11,7 @@ import { ButtonLink } from "../ui/Button";
 import { TiltCard } from "../ui/TiltCard";
 import { ArrowLeft, Clock } from "lucide-react";
 import { useLiteMotion } from "../../lib/useMediaQuery";
+import { BlogCover } from "../blog/BlogCover";
 
 export function LatestPosts({ posts }: { posts: BlogPost[] }) {
   const lite = useLiteMotion();
@@ -96,18 +97,7 @@ function FeaturedInsight({ post }: { post: BlogPost }) {
           }`}
         >
           <motion.div style={lite ? undefined : { y: mediaY }} className="absolute inset-[-12%]">
-            {post.coverImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={post.coverImage}
-                alt={post.title}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              />
-            ) : (
-              <div className="h-full w-full bg-gradient-to-br from-accent/25 via-transparent to-emerald-700/20" />
-            )}
+            <BlogCover src={post.coverImage} category={post.category} alt={post.title} sizes="(min-width: 1024px) 660px, 100vw" className="transition-transform duration-700 ease-out group-hover:scale-105" />
           </motion.div>
           <div className="absolute inset-0 bg-gradient-to-t from-panel via-panel/20 to-transparent" aria-hidden />
           <span className="absolute start-5 top-5 rounded-full border border-white/10 bg-bg/65 px-3 py-1 text-xs font-medium text-text backdrop-blur-md">
@@ -171,16 +161,7 @@ function SideInsight({ post, index }: { post: BlogPost; index: number }) {
             post.coverGradient ? `bg-gradient-to-br ${post.coverGradient}` : "bg-surface"
           }`}
         >
-          {post.coverImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={post.coverImage}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-          )}
+          <BlogCover src={post.coverImage} category={post.category} format="thumbnail" sizes="112px" className="transition-transform duration-500 group-hover:scale-110" />
           <span className="absolute inset-0 flex items-end justify-start p-2">
             <span className="rounded-md bg-bg/70 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-accent backdrop-blur-sm">
               {toPersianDigits(String(index).padStart(2, "0"))}
