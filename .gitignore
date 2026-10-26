@@ -48,3 +48,13 @@ next-env.d.ts
 
 # ── Server-only (SSL / hosting) ───────────────────────────────────────────────
 .well-known/
+
+# Local scratch files, caches and generated verification output
+/.local/
+/.cache/
+/tmp/
+/temp/
+*.log
+/test-results/
+/playwright-report/
+/blob-report/
