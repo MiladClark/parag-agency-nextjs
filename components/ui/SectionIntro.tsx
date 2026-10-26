@@ -16,6 +16,7 @@ export function SectionIntro({
   align = "center",
   className = "",
   children,
+  action,
 }: {
   label?: string;
   title: string;
@@ -24,6 +25,7 @@ export function SectionIntro({
   align?: Align;
   className?: string;
   children?: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   const reduce = useReducedMotion();
 
@@ -35,7 +37,7 @@ export function SectionIntro({
       transition={{ duration: 0.65, ease: EASE }}
       className={className}
     >
-      <SectionHeading eyebrow={label} title={title} accent={accent} body={body} align={align} />
+      <SectionHeading eyebrow={label} title={title} accent={accent} body={body} align={align} action={action} />
       {children}
     </motion.div>
   );

@@ -1,0 +1,44 @@
+.showcase8 { min-width: 0; }
+.showcase8-heading { position: relative; margin-bottom: 2.5rem; }
+.showcase8-controls { position: absolute; left: 0; bottom: 0; display: flex; direction: ltr; gap: .625rem; padding-bottom: .25rem; }
+.showcase8-controls button, .home-work-open { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border: 1px solid var(--border); border-radius: 50%; color: var(--text); background: transparent; }
+.showcase8-controls button { cursor: pointer; transition: border-color 250ms ease, color 250ms ease, opacity 250ms ease; }
+.showcase8-controls button:disabled { opacity: .25; cursor: default; }
+.showcase8-controls button:focus-visible, .home-work-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+.showcase8-window { position: relative; min-width: 0; }
+.showcase8-rail { display: flex; gap: 1.5rem; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; padding-block: 5px 12px; cursor: grab; touch-action: pan-x pan-y; -webkit-mask-image: linear-gradient(to right, var(--showcase-left, transparent), #000 6%, #000 94%, var(--showcase-right, #000)); mask-image: linear-gradient(to right, var(--showcase-left, transparent), #000 6%, #000 94%, var(--showcase-right, #000)); }
+.showcase8-rail::-webkit-scrollbar { display: none; }
+/* Lenis' generic prevent selector contains both axes. This rail owns horizontal
+   gestures only; vertical wheel/touch must keep scrolling the document. */
+.lenis .showcase8 .showcase8-rail { overscroll-behavior: contain auto; }
+.showcase8-rail:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+.showcase8-rail[data-dragging] { scroll-snap-type: none; cursor: grabbing; user-select: none; }
+.showcase8-window[data-fade-left="false"] { --showcase-left: #000; }
+.showcase8-window[data-fade-right="true"] { --showcase-right: transparent; }
+.showcase8-edge { position: absolute; top: 0; bottom: 0; width: 5%; max-width: 64px; pointer-events: none; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.showcase8-edge-left { left: 0; -webkit-mask-image: linear-gradient(to right, #000, transparent); mask-image: linear-gradient(to right, #000, transparent); }
+.showcase8-edge-right { right: 0; -webkit-mask-image: linear-gradient(to left, #000, transparent); mask-image: linear-gradient(to left, #000, transparent); }
+.showcase8-window[data-fade-left="false"] .showcase8-edge-left, .showcase8-window[data-fade-right="false"] .showcase8-edge-right { display: none; }
+.home-work-card { display: block; flex: 0 0 38%; min-width: 0; scroll-snap-align: start; color: var(--text); cursor: inherit; border-radius: .75rem; }
+.home-work-cover { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--border); border-radius: .875rem; background: var(--surface); }
+.home-work-image { object-fit: cover; transition: transform 600ms cubic-bezier(.22, 1, .36, 1); user-select: none; }
+.home-work-category { position: absolute; top: 1rem; right: 1rem; max-width: calc(100% - 2rem); padding: .35rem .75rem; border-radius: 2rem; color: var(--text); background: color-mix(in srgb, var(--bg) 84%, transparent); font-size: .6875rem; line-height: 1.7; }
+.home-work-info { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.25rem .15rem 0; }
+.home-work-copy { min-width: 0; }
+.home-work-info h3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: 3.4em; margin: 0; font-size: clamp(1rem, 1.5vw, 1.25rem); font-weight: 650; line-height: 1.7; text-wrap: pretty; }
+.home-work-info p { margin: .5rem 0 0; color: var(--text-muted); font-size: .75rem; line-height: 1.8; }
+.home-work-open { flex-shrink: 0; width: 2.5rem; height: 2.5rem; margin-top: .125rem; transition: color 250ms ease, border-color 250ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .showcase8-controls button:not(:disabled):hover, .home-work-card:hover .home-work-open { color: var(--accent); border-color: var(--accent); }
+  .home-work-card:hover .home-work-image { transform: scale(1.025); }
+}
+@media (max-width: 1023px) { .home-work-card { flex-basis: 58%; } }
+@media (max-width: 639px) {
+  .showcase8-heading { display: flex; flex-direction: column; align-items: stretch; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .showcase8-controls { position: static; align-self: flex-end; }
+  .showcase8-rail { gap: 1rem; }
+  .home-work-card { flex-basis: 86%; }
+  .home-work-info { gap: .75rem; }
+  .home-work-category { top: .75rem; right: .75rem; font-size: .625rem; }
+}
+@media (prefers-reduced-motion: reduce) { .home-work-image, .home-work-open, .showcase8-controls button { transition: none; } }

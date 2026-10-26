@@ -82,15 +82,26 @@ export function SectionHeading({
   body,
   align = "center",
   accent,
+  action,
 }: {
   eyebrow?: string;
   title?: string;
   body?: string;
   align?: Align;
   accent?: string;
+  action?: React.ReactNode;
 }) {
   if (!title) return null;
   const centered = align === "center";
+
+  const heading = <h2
+    className={[
+      "max-w-3xl text-3xl font-black leading-[1.2] tracking-tight text-text sm:text-4xl lg:text-5xl lg:leading-[1.15]",
+      centered ? "mx-auto" : "",
+    ].join(" ")}
+  >
+    {title}{accent ? <> <span className="text-gradient">{accent}</span></> : null}
+  </h2>;
 
   return (
     <div
@@ -100,20 +111,7 @@ export function SectionHeading({
       ].join(" ")}
     >
       {eyebrow && <SectionLabel align={align}>{eyebrow}</SectionLabel>}
-      <h2
-        className={[
-          "max-w-3xl text-3xl font-black leading-[1.2] tracking-tight text-text sm:text-4xl lg:text-5xl lg:leading-[1.15]",
-          centered ? "mx-auto" : "",
-        ].join(" ")}
-      >
-        {title}
-        {accent ? (
-          <>
-            {" "}
-            <span className="text-gradient">{accent}</span>
-          </>
-        ) : null}
-      </h2>
+      {action ? <div className="flex w-full items-center justify-between gap-8">{heading}{action}</div> : heading}
       {body && (
         <p
           className={[
