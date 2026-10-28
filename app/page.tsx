@@ -10,6 +10,7 @@ import { JourneySteps } from "@/components/home/JourneySteps";
 import { ServicesList } from "@/components/home/ServicesList";
 import { StatsBand } from "@/components/home/StatsBand";
 import { PortfolioParallax } from "@/components/home/PortfolioParallax";
+import { BusinessPartners } from "@/components/home/BusinessPartners";
 import { LatestPosts } from "@/components/home/LatestPosts";
 import { FinalCta } from "@/components/home/FinalCta";
 import { fileRepository } from "@/content/fileRepository";
@@ -59,6 +60,7 @@ export default async function Page() {
         <ServicesList services={services} />
         <StatsBand />
         <PortfolioParallax portfolio={portfolio} />
+        <BusinessPartners />
         <LatestPosts posts={latestPosts} />
         <FinalCta />
       </div>
