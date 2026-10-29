@@ -51,7 +51,7 @@ export async function getSiteSettings(): Promise<CmsSiteSettings> {
   try {
     const res = await fetch(
       `${PAYLOAD_URL}/api/site/settings?tenant=${encodeURIComponent(CURRENT_TENANT)}`,
-      { next: { revalidate: REVALIDATE_SECONDS } },
+      { next: { revalidate: REVALIDATE_SECONDS, tags: [`cms:${CURRENT_TENANT}`] } },
     );
     if (!res.ok) throw new Error(`settings ${res.status}`);
     const data = (await res.json()) as Partial<{

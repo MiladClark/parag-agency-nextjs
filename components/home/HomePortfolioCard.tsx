@@ -16,7 +16,7 @@ export function HomePortfolioCard({ item, index }: { item: PortfolioItem; index:
   return (
     <Link href={`/portfolio/${item.slug}`} className="home-work-card" aria-labelledby={`home-work-${item.slug}`} draggable={false} data-project-index={index}>
       <div className="home-work-cover">
-        <Image src={projectCover(item)} alt="" fill sizes="(min-width: 1024px) 430px, (min-width: 640px) 58vw, 86vw" className="home-work-image" unoptimized={!item.coverImage} draggable={false} />
+        <Image src={projectCover(item)} alt="" fill sizes="(min-width: 1024px) 430px, (min-width: 640px) 58vw, 86vw" className="home-work-image" draggable={false} />
         <span className="home-work-category">{item.category}</span>
       </div>
       <div className="home-work-info">

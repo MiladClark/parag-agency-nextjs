@@ -31,6 +31,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  images: {
+    formats: ["image/webp"],
+    qualities: [75, 90],
+    remotePatterns: [{ protocol: new URL(cmsOrigin).protocol.slice(0, -1) as "http" | "https", hostname: new URL(cmsOrigin).hostname, port: new URL(cmsOrigin).port }],
+  },
   // Turbopack runs PostCSS in a child process and talks to it over a loopback
   // socket. On the production host that process exits 0 before the handshake,
   // which panics the build on the first CSS file (site-status.css). Worker

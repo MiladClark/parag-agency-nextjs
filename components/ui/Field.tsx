@@ -1,3 +1,4 @@
+import { useHydrated } from "@/lib/useHydrated";
 import { Children, isValidElement, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
@@ -49,14 +50,13 @@ export function Select({
   "aria-label": ariaLabel,
 }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const [rect, setRect] = useState<{ top: number; left: number; width: number; openUp: boolean } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const options = optionsFromChildren(children);
   const current = options.find((o) => o.value === value) ?? options[0];
 
-  useEffect(() => setMounted(true), []);
 
   useLayoutEffect(() => {
     if (!open || !triggerRef.current) return;

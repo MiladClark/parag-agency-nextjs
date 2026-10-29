@@ -1,3 +1,5 @@
+
+import { responsiveImage } from "@/lib/responsiveImage";
 import type { BlogAuthor } from "../../content/types";
 import { formatJalaliDate, toPersianDigits } from "../../lib/format";
 import { Clock } from "lucide-react";
@@ -11,7 +13,7 @@ export function AuthorAvatar({ author, size = "md" }: { author: BlogAuthor; size
       {author.avatar ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={author.avatar}
+          {...responsiveImage(author.avatar, "48px")}
           alt={author.name}
           loading="eager"
           decoding="async"

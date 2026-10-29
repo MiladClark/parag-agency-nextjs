@@ -253,6 +253,8 @@ export function PostComments({
   }, [postSlug]);
 
   useEffect(() => {
+    // Synchronize external CMS comments; load updates state asynchronously after fetch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 

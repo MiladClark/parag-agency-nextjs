@@ -43,7 +43,7 @@ async function get<T>(path: string, preview?: { enabled: boolean; token?: string
     // they just changed away from.
     ...(preview?.enabled
       ? { cache: "no-store" as const, headers: preview.token ? { Authorization: `JWT ${preview.token}` } : {} }
-      : { next: { revalidate: 60 } }),
+      : { next: { revalidate: 60, tags: [`cms:${CURRENT_TENANT}`] } }),
   });
   if (!res.ok) throw new Error(`Payload API ${path} failed: ${res.status}`);
   return (await res.json()) as T;
@@ -54,6 +54,7 @@ async function get<T>(path: string, preview?: { enabled: boolean; token?: string
 interface PayloadMedia {
   url?: string | null;
   alt?: string | null;
+  updatedAt?: string | null;
 }
 interface PayloadCategory {
   slug: string;
@@ -180,7 +181,13 @@ function inlineNodes(nodes: LexicalNode[] | undefined): InlineNode[] {
 function mediaUrl(m: PayloadMedia | string | null | undefined): string | undefined {
   if (!m || typeof m === "string") return undefined;
   if (!m.url) return undefined;
-  return m.url.startsWith("http") ? m.url : `${PAYLOAD_URL}${m.url}`;
+  const src = m.url.startsWith("http") ? m.url : `${PAYLOAD_URL}${m.url}`;
+  if (!m.updatedAt) return src;
+  // A replaced CMS file gets a new optimizer/cache key without evicting every
+  // image. Revalidation of article data alone cannot expire Next's image cache.
+  const versioned = new URL(src);
+  versioned.searchParams.set("v", m.updatedAt);
+  return versioned.href;
 }
 
 export function lexicalToBlocks(root: LexicalNode | undefined): PostBlock[] {

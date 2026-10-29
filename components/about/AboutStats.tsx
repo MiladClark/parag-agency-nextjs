@@ -48,10 +48,7 @@ function StatCard({
   const delay = index * 0.1;
 
   useEffect(() => {
-    if (!inView || reduce) {
-      if (reduce) setDisplay(stat.value);
-      return;
-    }
+    if (!inView || reduce) return;
     const controls = animate(0, stat.value, {
       duration: 1.5,
       delay,
@@ -76,7 +73,7 @@ function StatCard({
       />
       <p className="relative bg-linear-to-b from-text via-accent to-accent-hover bg-clip-text text-4xl font-black text-transparent sm:text-5xl">
         {stat.prefix ?? ""}
-        {toPersianDigits(display)}
+        {toPersianDigits(reduce ? stat.value : display)}
         {stat.suffix ?? ""}
       </p>
       <p className="relative mt-2 text-xs text-text-muted sm:text-sm">{stat.label}</p>

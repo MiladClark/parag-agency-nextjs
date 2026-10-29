@@ -1,3 +1,5 @@
+
+import NextLink from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
@@ -130,13 +132,13 @@ export default async function Page({ params }: { params: Params }) {
 
         <Container className="relative pb-8 pt-12 sm:pb-10 sm:pt-16">
           <nav className="mb-6 flex min-w-0 items-center gap-2 text-sm text-text-muted sm:mb-7">
-            <a href="/" className="shrink-0 transition-colors hover:text-accent">
+            <NextLink href="/" className="shrink-0 transition-colors hover:text-accent">
               خانه
-            </a>
+            </NextLink>
             <Icon name="chevron-left" className="shrink-0 text-xs opacity-60" />
-            <a href="/blog" className="shrink-0 transition-colors hover:text-accent">
+            <NextLink href="/blog" className="shrink-0 transition-colors hover:text-accent">
               بلاگ
-            </a>
+            </NextLink>
             <Icon name="chevron-left" className="shrink-0 text-xs opacity-60" />
             <span className="min-w-0 truncate text-text">{post.title}</span>
           </nav>

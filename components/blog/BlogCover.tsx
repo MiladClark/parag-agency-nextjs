@@ -1,4 +1,5 @@
 import { blogPlaceholder, type BlogCoverFormat } from "../../lib/blogPlaceholder";
+import { responsiveImage } from "@/lib/responsiveImage";
 
 type Props = {
   src?: string;
@@ -21,11 +22,8 @@ export function BlogCover({ src, category, alt = "", format = "card", sizes = "1
       <picture>
         {!image && format === "hero" && <source media="(min-width: 640px)" srcSet={wide.srcSet} sizes={sizes} />}
         {/* Pre-encoded crops deliberately use picture/srcset for art direction. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={image || fallback.src}
-          srcSet={image ? undefined : fallback.srcSet}
-          sizes={image ? undefined : sizes}
+          {...(image ? responsiveImage(image, sizes) : { src: fallback.src, srcSet: fallback.srcSet, sizes })}
           alt={image ? alt : ""}
           loading={eager ? "eager" : "lazy"}
           fetchPriority={eager ? "high" : undefined}

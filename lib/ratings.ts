@@ -13,7 +13,7 @@ export async function fetchRatingSummary(postSlug: string): Promise<RatingSummar
   try {
     const res = await fetch(
       `${PAYLOAD}/api/site/ratings?post=${encodeURIComponent(postSlug)}&tenant=${encodeURIComponent(CURRENT_TENANT)}`,
-      { next: { revalidate: 60 } },
+      { next: { revalidate: 60, tags: [`cms:${CURRENT_TENANT}`] } },
     );
     if (!res.ok) return null;
     return (await res.json()) as RatingSummary;

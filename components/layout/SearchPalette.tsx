@@ -1,5 +1,8 @@
 "use client";
 
+import { useHydrated } from "@/lib/useHydrated";
+import { useStoredString } from "@/lib/useStoredString";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -52,6 +55,7 @@ function pushRecent(q: string) {
   try {
     const next = [q, ...readRecent().filter((x) => x !== q)].slice(0, 5);
     localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event("parag-storage-change"));
   } catch {
     /* private mode */
   }
@@ -59,25 +63,41 @@ function pushRecent(q: string) {
 
 export function SearchPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const reduce = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<Hit[]>([]);
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(0);
-  const [recent, setRecent] = useState<string[]>([]);
+  const [storedRecent] = useStoredString(RECENT_KEY, "[]");
+  let recent: string[] = [];
+  try {
+    const parsed: unknown = JSON.parse(storedRecent);
+    if (Array.isArray(parsed)) recent = parsed.filter((item): item is string => typeof item === "string");
+  } catch { /* Ignore malformed stored history. */ }
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) {
+      setQuery("");
+      setHits([]);
+      setLoading(false);
+      setActive(0);
+    }
+  }
 
-  useEffect(() => setMounted(true), []);
+  function updateQuery(next: string) {
+    setQuery(next);
+    setHits([]);
+    setActive(0);
+    setLoading(open && next.trim().length >= 2);
+  }
+
 
   // Reset + focus each time the palette opens.
   useEffect(() => {
     if (!open) return;
-    setQuery("");
-    setHits([]);
-    setActive(0);
-    setRecent(readRecent());
     const t = window.setTimeout(() => inputRef.current?.focus(), 60);
     return () => window.clearTimeout(t);
   }, [open]);
@@ -86,30 +106,25 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose: () =>
   useEffect(() => {
     if (!open) return;
     const q = query.trim();
-    if (q.length < 2) {
-      setHits([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+    if (q.length < 2) return;
+    const ctrl = new AbortController();
     const t = window.setTimeout(async () => {
-      abortRef.current?.abort();
-      const ctrl = new AbortController();
-      abortRef.current = ctrl;
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
           signal: ctrl.signal,
         });
         const data = (await res.json()) as { hits: Hit[] };
-        setHits(data.hits);
-        setActive(0);
+        if (!ctrl.signal.aborted) {
+          setHits(data.hits);
+          setActive(0);
+        }
       } catch {
         /* aborted or offline */
       } finally {
-        setLoading(false);
+        if (!ctrl.signal.aborted) setLoading(false);
       }
     }, 220);
-    return () => window.clearTimeout(t);
+    return () => { window.clearTimeout(t); ctrl.abort(); };
   }, [query, open]);
 
   const go = useCallback(
@@ -188,7 +203,7 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose: () =>
               <input
                 ref={inputRef}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => updateQuery(e.target.value)}
                 placeholder="جستجو در مقالات، خدمات، نمونه‌کارها…"
                 className="min-w-0 flex-1 bg-transparent text-base text-text outline-none placeholder:text-text-muted"
                 aria-label="عبارت جستجو"
@@ -223,7 +238,7 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose: () =>
                           <button
                             key={r}
                             type="button"
-                            onClick={() => setQuery(r)}
+                            onClick={() => updateQuery(r)}
                             className="flex items-center gap-1.5 rounded-full border border-border/70 px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-accent/40 hover:text-accent"
                           >
                             <Clock className="h-3 w-3" />

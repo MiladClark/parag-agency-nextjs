@@ -1,3 +1,5 @@
+
+import { responsiveImage } from "@/lib/responsiveImage";
 import type { InlineNode, PostBlock } from "../../content/types";
 import { buildHeadingIds } from "../../lib/toc";
 
@@ -130,7 +132,7 @@ function Block({
           <div className="overflow-hidden rounded-2xl border border-border shadow-[0_20px_50px_-28px_rgba(0,0,0,0.5)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={block.src}
+              {...responsiveImage(block.src, "(min-width: 1280px) 1200px, 100vw")}
               alt={block.alt}
               loading="lazy"
               decoding="async"

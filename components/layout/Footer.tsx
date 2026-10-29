@@ -1,5 +1,7 @@
 "use client";
 
+import NextLink from "next/link";
+
 import { useCmsContact } from "@/components/contact/ContactProvider";
 import { directionsUrl, phoneHref } from "@/lib/contact";
 
@@ -73,7 +75,9 @@ export function Footer() {
       <div className="relative z-10 mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr_1.1fr]">
         {/* Brand */}
         <div className="flex flex-col gap-4">
-          <a href="/" className="group flex items-center gap-2.5">
+          <NextLink href="/" className="group flex items-center gap-2.5">
+            {/* Vector logo: raster optimization is unnecessary. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-mark.svg"
               alt="پاراگ"
@@ -83,7 +87,7 @@ export function Footer() {
               height={40}
             />
             <span className="text-xl font-black text-text">پاراگ</span>
-          </a>
+          </NextLink>
           <p className="max-w-sm text-sm leading-7 text-text-muted">{siteSettings.description}</p>
           <div className="mt-1 flex items-center gap-2">
             {social.map((s) => (

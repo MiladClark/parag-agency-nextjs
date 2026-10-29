@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 
 // Reveals its children on scroll via IntersectionObserver.
 // SSR renders the content normally; the `.reveal` class only hides it once
@@ -18,10 +19,9 @@ export function Reveal({
 }) {
   const ref = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
-  const [enabled, setEnabled] = useState(false);
+  const enabled = useHydrated();
 
   useEffect(() => {
-    setEnabled(true);
     const el = ref.current;
     if (!el) return;
     const observer = new IntersectionObserver(

@@ -21,7 +21,7 @@ export function AboutStory({
       <div className="relative mx-auto grid max-w-6xl overflow-hidden rounded-[2.5rem] border border-border/70 bg-surface/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_30px_80px_-30px_rgba(0,0,0,0.55)] lg:grid-cols-[1.05fr_1fr]">
         <div className="relative min-h-[18rem] overflow-hidden lg:min-h-[28rem]">
           <Image
-            src="/about-story-visual.png"
+            src="/about-story-visual.webp"
             alt=""
             fill
             sizes="(max-width: 1024px) 100vw, 50vw"

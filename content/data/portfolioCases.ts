@@ -9,7 +9,7 @@ export const portfolioCases: PortfolioCaseStudy[] = [
     category: "طراحی و توسعه اپلیکیشن",
     client: "استارتاپ نبض",
     cover: "from-emerald-500/40 to-green-900/40",
-    coverImage: "/portfolio/pulse/hero.png",
+    coverImage: "/portfolio/pulse/hero.webp",
     summary:
       "طراحی و توسعه کامل اپلیکیشن موبایل تناسب اندام با داشبورد شخصی، برنامه تمرین، آنالیتیکس پیشرفت و پروفایل دستاوردها.",
     tags: ["اپلیکیشن موبایل", "UI/UX", "React Native", "پروداکت"],
@@ -18,13 +18,13 @@ export const portfolioCases: PortfolioCaseStudy[] = [
       description:
         "کیس‌استادی طراحی و توسعه اپلیکیشن نبض: تجربه کاربری تیره، داشبورد تمرین، آنالیتیکس و سیستم دستاوردها.",
       canonical: `${SITE_URL}/portfolio/pulse-fitness`,
-      ogImage: `${SITE_URL}/portfolio/pulse/hero.png`,
+      ogImage: `${SITE_URL}/portfolio/pulse/hero.webp`,
     },
     year: "۱۴۰۳",
     role: "پروداکت، طراحی UI/UX، توسعه موبایل",
     timeline: "۴ ماه",
     platform: "iOS و Android",
-    heroImage: "/portfolio/pulse/hero.png",
+    heroImage: "/portfolio/pulse/hero.webp",
     overview: [
       "نبض یک اپلیکیشن تناسب اندام است که تمرین روزانه، پیگیری پیشرفت و انگیزه کاربر را در یک تجربه یکپارچه جمع می‌کند.",
       "از صفر تا انتشار کنار تیم نبض بودیم: کشف محصول، طراحی رابط، پروتوتایپ تعاملی و توسعه نسخه موبایل.",
@@ -41,22 +41,22 @@ export const portfolioCases: PortfolioCaseStudy[] = [
       {
         title: "داشبورد شخصی",
         body: "نمای روزانه با حلقه پیشرفت، میانبر تمرین و کارت‌های هدف؛ کاربر در سه ثانیه می‌فهمد امروز چه کاری مانده.",
-        image: "/portfolio/pulse/home.png",
+        image: "/portfolio/pulse/home.webp",
       },
       {
         title: "جریان تمرین",
         body: "صفحه تمرین با تایمر، مراحل و راهنمای حرکت؛ تمرکز روی اجرا بدون حواس‌پرتی.",
-        image: "/portfolio/pulse/workout.png",
+        image: "/portfolio/pulse/workout.webp",
       },
       {
         title: "آنالیتیکس پیشرفت",
         body: "نمودارهای هفتگی و شاخص‌های کالری و فعالیت تا کاربر رشد خودش را ببیند و برگردد.",
-        image: "/portfolio/pulse/analytics.png",
+        image: "/portfolio/pulse/analytics.webp",
       },
       {
         title: "پروفایل و دستاوردها",
         body: "مدال‌ها، استریک و تقویم فعالیت برای تقویت حس پیشرفت و رقابت سالم با خود.",
-        image: "/portfolio/pulse/profile.png",
+        image: "/portfolio/pulse/profile.webp",
       },
     ],
     stack: ["React Native", "TypeScript", "Node.js", "PostgreSQL", "Figma", "Motion"],
@@ -67,10 +67,10 @@ export const portfolioCases: PortfolioCaseStudy[] = [
       { value: "۴ ماه", label: "از ایده تا انتشار" },
     ],
     gallery: [
-      { src: "/portfolio/pulse/home.png", alt: "داشبورد اپ نبض", caption: "خانه" },
-      { src: "/portfolio/pulse/workout.png", alt: "صفحه تمرین نبض", caption: "تمرین" },
-      { src: "/portfolio/pulse/analytics.png", alt: "آنالیتیکس نبض", caption: "پیشرفت" },
-      { src: "/portfolio/pulse/profile.png", alt: "پروفایل و دستاوردها", caption: "پروفایل" },
+      { src: "/portfolio/pulse/home.webp", alt: "داشبورد اپ نبض", caption: "خانه" },
+      { src: "/portfolio/pulse/workout.webp", alt: "صفحه تمرین نبض", caption: "تمرین" },
+      { src: "/portfolio/pulse/analytics.webp", alt: "آنالیتیکس نبض", caption: "پیشرفت" },
+      { src: "/portfolio/pulse/profile.webp", alt: "پروفایل و دستاوردها", caption: "پروفایل" },
     ],
   },
 ];

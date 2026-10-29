@@ -13,7 +13,9 @@
     "start:next": "next start -p 3602 -H 0.0.0.0",
     "start:standalone": "node .next/standalone/server.js",
     "deploy": "bash scripts/deploy.sh",
-    "lint": "eslint"
+    "lint": "eslint",
+    "audit:performance": "node scripts/audit-performance.mjs",
+    "typecheck": "tsc --noEmit --incremental false"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "^5.2.8",

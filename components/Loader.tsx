@@ -9,6 +9,8 @@ export function Loader({ label = "در حال بارگذاری…" }: { label?: 
           className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent border-l-accent/40"
           style={{ animation: "parag-spin 0.9s linear infinite" }}
         />
+        {/* Vector logo: raster optimization is unnecessary. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoMark}
           alt="پاراگ"

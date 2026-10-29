@@ -1,3 +1,5 @@
+
+import NextLink from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getContentRepository } from "@/content/repository";
@@ -46,9 +48,9 @@ export default async function Page({ params }: { params: Params }) {
         />
         <Container className="relative py-20 sm:py-24">
           <nav className="mb-8 flex items-center gap-2 text-sm text-text-muted">
-            <a href="/" className="hover:text-accent">خانه</a>
+            <NextLink href="/" className="hover:text-accent">خانه</NextLink>
             <Icon name="chevron-left" className="text-xs" />
-            <a href="/services" className="hover:text-accent">خدمات</a>
+            <NextLink href="/services" className="hover:text-accent">خدمات</NextLink>
             <Icon name="chevron-left" className="text-xs" />
             <span className="text-text">{service.title}</span>
           </nav>

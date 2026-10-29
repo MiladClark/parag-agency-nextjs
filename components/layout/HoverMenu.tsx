@@ -1,5 +1,7 @@
 "use client";
 
+import { useHydrated } from "@/lib/useHydrated";
+
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -30,13 +32,12 @@ export function HoverMenu({
 }) {
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLSpanElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<number | null>(null);
 
-  useEffect(() => setMounted(true), []);
 
   const updatePos = useCallback(() => {
     const r = triggerRef.current?.getBoundingClientRect();

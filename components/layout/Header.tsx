@@ -1,5 +1,7 @@
 "use client";
 
+import NextLink from "next/link";
+
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
@@ -8,8 +10,7 @@ import { services } from "../../content/data/services";
 import { Icon } from "../ui/Icon";
 import { ThemeToggle } from "../ThemeToggle";
 import { HoverMenu } from "./HoverMenu";
-import { SearchPalette } from "./SearchPalette";
-import { MobileMenu } from "./MobileMenu";
+import { SearchPalette, MobileMenu } from "./DeferredOverlays";
 
 const SPRING = { type: "spring", stiffness: 380, damping: 32, mass: 0.7 } as const;
 
@@ -43,7 +44,11 @@ export function Header() {
     setFloating((prev) => (prev === next ? prev : next));
   });
 
-  useEffect(() => setMenuOpen(false), [path]);
+  const [menuPath, setMenuPath] = useState(path);
+  if (menuPath !== path) {
+    setMenuPath(path);
+    setMenuOpen(false);
+  }
 
   // Global shortcut: Ctrl/Cmd+K opens search.
   useEffect(() => {
@@ -88,7 +93,9 @@ export function Header() {
               }`}
             >
           {/* Brand */}
-          <a href="/" className="group flex shrink-0 items-center lg:justify-self-start">
+          <NextLink href="/" className="group flex shrink-0 items-center lg:justify-self-start">
+            {/* Vector logo: raster optimization is unnecessary. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-mark.svg"
               alt="پاراگ"
@@ -99,6 +106,8 @@ export function Header() {
               height={36}
             />
             <span className="hidden lg:block">
+              {/* Vector logo: raster optimization is unnecessary. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo-big-light.svg"
                 alt="پاراگ"
@@ -107,6 +116,8 @@ export function Header() {
                 className="theme-light-only h-12 w-auto"
                 height={48}
               />
+              {/* Vector logo: raster optimization is unnecessary. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo-big-dark.svg"
                 alt="پاراگ"
@@ -116,7 +127,7 @@ export function Header() {
                 height={48}
               />
             </span>
-          </a>
+          </NextLink>
 
           {/* Center pill nav: hover highlight glides between items. */}
           <nav
@@ -259,13 +270,13 @@ function ServicesMega() {
           </span>
         </a>
       ))}
-      <a
+      <NextLink
         href="/services"
         className="mt-1 flex items-center justify-center gap-1.5 rounded-2xl border border-border/60 px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-accent-soft"
       >
         مشاهده همه خدمات
         <Icon name="arrow-left" className="text-xs" />
-      </a>
+      </NextLink>
     </div>
   );
 }

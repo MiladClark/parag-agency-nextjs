@@ -1,9 +1,11 @@
 "use client";
 
+import { useHydrated } from "@/lib/useHydrated";
+
 import { useCmsContact } from "@/components/contact/ContactProvider";
 import { phoneHref } from "@/lib/contact";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, X } from "lucide-react";
@@ -33,9 +35,8 @@ export function MobileMenu({
 }) {
   const contact = { ...siteSettings.contact, ...useCmsContact() };
   const reduce = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useHydrated();
 
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +70,8 @@ export function MobileMenu({
           />
 
           <div className="flex h-[4.5rem] shrink-0 items-center justify-between px-5">
+            {/* Vector logo: raster optimization is unnecessary. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-mark.svg"
               alt="پاراگ"

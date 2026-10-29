@@ -91,7 +91,7 @@ function JourneyPanel({ index, progress, active }: { index: number; progress: Mo
         <p className="journey-description">{step.body}</p>
       </motion.div>
       <motion.div className="journey-art" style={{ x: artX, y: artY, rotateY, rotateZ, scale, opacity }} aria-hidden>
-        <Image src={`/images/journey/${artwork[index]}.webp`} alt="" width={900} height={900} sizes="48vw" unoptimized draggable={false} />
+        <Image src={`/images/journey/${artwork[index]}.webp`} alt="" width={900} height={900} sizes="(min-width: 1280px) 615px, 48vw" quality={90} draggable={false} />
       </motion.div>
     </article>
   );
@@ -105,7 +105,7 @@ function SwipeJourney({ reduced }: { reduced: boolean }) {
         {journeySteps.map((step, i) => (
           <article className="journey-swipe-panel" key={step.index} dir="rtl">
             <div className="journey-swipe-art" style={{ rotate: `${tilts[i]}deg` }} aria-hidden>
-              <Image src={`/images/journey/${artwork[i]}.webp`} alt="" width={900} height={900} sizes="(min-width: 768px) 60vw, 85vw" unoptimized draggable={false} />
+              <Image src={`/images/journey/${artwork[i]}.webp`} alt="" width={900} height={900} sizes="(min-width: 768px) 60vw, 85vw" quality={90} draggable={false} />
             </div>
             <h3>{step.title}</h3>
             <p className="journey-description">{step.body}</p>

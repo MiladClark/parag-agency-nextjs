@@ -1,3 +1,5 @@
+
+import NextLink from "next/link";
 import type { BlogPost } from "../../content/types";
 import { BlogCard } from "../cards/BlogCard";
 import { Reveal } from "../Reveal";
@@ -11,12 +13,12 @@ export function RelatedPosts({ posts }: { posts: BlogPost[] }) {
           <h2 className="relative ps-4 text-2xl font-bold text-text before:absolute before:inset-y-1 before:start-0 before:w-1 before:rounded-full before:bg-accent sm:text-3xl">
             مقالات مرتبط
           </h2>
-          <a
+          <NextLink
             href="/blog"
             className="shrink-0 text-sm text-text-muted transition-colors hover:text-accent"
           >
             همه مقالات
-          </a>
+          </NextLink>
         </div>
       </Reveal>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

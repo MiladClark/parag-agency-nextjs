@@ -37,10 +37,7 @@ function Figure({ stat, index }: { stat: HeroStat; index: number }) {
     if (!inView) return;
     // Count-up is the point of the section, so reduced motion still lands on
     // the real figure — it just arrives immediately instead of ticking.
-    if (reduce) {
-      setDisplay(stat.value);
-      return;
-    }
+    if (reduce) return;
     const controls = animate(0, stat.value, {
       duration: 1.6,
       delay,
@@ -64,7 +61,7 @@ function Figure({ stat, index }: { stat: HeroStat; index: number }) {
       />
       <span className="bg-gradient-to-b from-text via-accent to-accent-hover bg-clip-text text-4xl font-extrabold text-transparent sm:text-6xl lg:text-7xl">
         {stat.prefix ?? ""}
-        {toPersianDigits(display)}
+        {toPersianDigits(reduce ? stat.value : display)}
         {stat.suffix ?? ""}
       </span>
       <span className="text-xs text-text-muted sm:text-sm">{stat.label}</span>

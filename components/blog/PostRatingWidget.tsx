@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useStoredString } from "@/lib/useStoredString";
 import { Star } from "lucide-react";
 import { CURRENT_TENANT } from "../../content/tenant";
 import { formatRatingAverage, type RatingSummary } from "../../lib/ratings";
@@ -18,7 +19,9 @@ type Props = {
 export function PostRatingWidget({ postSlug, initial }: Props) {
   const [summary, setSummary] = useState<RatingSummary | null>(initial ?? null);
   const [hover, setHover] = useState(0);
-  const [mine, setMine] = useState(0);
+  const [storedMine, setStoredMine] = useStoredString(storageKey(postSlug), "0");
+  const score = Number(storedMine);
+  const mine = Number.isInteger(score) && score >= 1 && score <= 5 ? score : 0;
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,15 +32,6 @@ export function PostRatingWidget({ postSlug, initial }: Props) {
   const captchaRef = useRef<CaptchaHandle>(null);
 
   const allow = summary?.allowRatings !== false;
-
-  useEffect(() => {
-    try {
-      const stored = Number(localStorage.getItem(storageKey(postSlug)));
-      if (stored >= 1 && stored <= 5) setMine(stored);
-    } catch {
-      /* private mode */
-    }
-  }, [postSlug]);
 
   useEffect(() => {
     if (initial) return;
@@ -106,12 +100,7 @@ export function PostRatingWidget({ postSlug, initial }: Props) {
           setError(data.errors?.[0]?.message || data.message || "ثبت امتیاز ناموفق بود.");
           return;
         }
-        setMine(score);
-        try {
-          localStorage.setItem(storageKey(postSlug), String(score));
-        } catch {
-          /* private mode */
-        }
+        setStoredMine(String(score));
         setSummary({
           average: data.average,
           count: data.count,
@@ -126,7 +115,7 @@ export function PostRatingWidget({ postSlug, initial }: Props) {
         setSending(false);
       }
     },
-    [allow, sending, postSlug, mine],
+    [allow, sending, postSlug, mine, setStoredMine],
   );
 
   const display = hover || mine;

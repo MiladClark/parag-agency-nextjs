@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, type RefObject } from "react";
+import { useHydrated } from "@/lib/useHydrated";
+import { useStoredString } from "@/lib/useStoredString";
 import { createPortal } from "react-dom";
 import {
   AnimatePresence,
@@ -54,8 +56,10 @@ export function BlogReadingRail({
   rating,
 }: Props) {
   const reduce = useReducedMotion();
-  const [open, setOpen] = useState(true);
-  const [hydrated, setHydrated] = useState(false);
+  const [storedOpen, setStoredOpen] = useStoredString(STORAGE_KEY, "open");
+  const open = storedOpen !== "closed";
+  const setOpen = (next: boolean) => setStoredOpen(next ? "open" : "closed");
+  const hydrated = useHydrated();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pct, setPct] = useState(0);
   const { activeId, goTo } = useTocSpy(toc, !reduce);
@@ -82,25 +86,6 @@ export function BlogReadingRail({
     const next = Math.round(Math.min(1, Math.max(0, v)) * 100);
     setPct((prev) => (prev === next ? prev : next));
   });
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "closed") setOpen(false);
-    } catch {
-      /* private mode */
-    }
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, open ? "open" : "closed");
-    } catch {
-      /* private mode */
-    }
-  }, [open, hydrated]);
 
   // Close on Escape. Page scroll is NOT locked: the backdrop already blocks
   // interaction, and locking body overflow proved fragile (page stayed frozen).
